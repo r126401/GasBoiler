@@ -1,0 +1,359 @@
+menu "Thermostat configuration"
+
+
+
+
+    config RELAY_GPIO
+        int "Relay Thermostat GPIO"
+        default 10
+        help 
+            GPIO number to connect relay to excite thermostat
+
+
+    config USE_LCD
+        bool "Indicate if use rgb panel"
+        default n
+        help 
+            include code for implement rgb panel into proyect
+            
+    config LCD_H_RES
+        depends on USE_LCD
+        int "Horizontal resolution rgb panel"
+        default 480
+        help
+            Indicate the horizontal resolution of rgb panel
+            
+    config LCD_V_RES
+        depends on USE_LCD
+        int "Vertical resolution rgb panel"
+        default 272
+        help
+            Indicate the vertical resolution of rgb panel		
+    
+        
+    config TIME_OFF_BACKLIGHT
+        depends on USE_LCD
+        int "Tiempo de apagado del LCD"
+        default 60
+        help 
+            Indica el tiempo en segundos en el que se apagara la pantalla
+    
+    menu "LCD KIND"
+        depends on USE_LCD
+        choice LCD
+            depends on USE_LCD
+            prompt "Tipo de LCD"
+            help
+                Selecciona el tipo de LCD a usar
+        
+            config RGB_LCD
+                bool "RGB_LCD"
+                help
+                    RGB_LCD
+                   
+                config RGB_LCD_PIXEL_CLOCK_HZ
+                depends on RGB_LCD
+                int "RGB_LCD_PIXEL_CLOCK_HZ"
+                default 7000000
+                help
+                    RGB_LCD_PIXEL_CLOCK_HZ          
+                    
+                    
+                config PIN_NUM_BK_LIGHT
+                depends on RGB_LCD
+                int "PIN_NUM_BK_LIGHT"
+                default 2
+                help
+                    RGB_LCD_PIN_NUM_BK_LIGHT          
+                    
+                    
+                config RGB_LCD_PIN_NUM_HSYNC
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_HSYNC"
+                default 39
+                help
+                    RGB_LCD_PIN_NUM_HSYNC          
+                    
+                    
+                config RGB_LCD_PIN_NUM_VSYNC
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_VSYNC"
+                default 41
+                help
+                    RGB_LCD_PIN_NUM_VSYNC          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DE
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DE"
+                default 40
+                help
+                    RGB_LCD_PIN_NUM_DE          
+                    
+                    
+                config RGB_LCD_PIN_NUM_PCLK
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_PCLK"
+                default 42
+                help
+                    RGB_LCD_PIN_NUM_PCLK          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA0
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA0"
+                default 8
+                help
+                    RGB_LCD_PIN_NUM_DATA0          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA1
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA1"
+                default 3
+                help
+                    RGB_LCD_PIN_NUM_DATA1          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA2
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA2"
+                default 46
+                help
+                    RGB_LCD_PIN_NUM_DATA2          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA3
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA3"
+                default 9
+                help
+                    RGB_LCD_PIN_NUM_DATA3          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA4
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA4"
+                default 1
+                help
+                    RGB_LCD_PIN_NUM_DATA4          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA5
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA5"
+                default 5
+                help
+                    RGB_LCD_PIN_NUM_DATA5          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA6
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA6"
+                default 6
+                help
+                    RGB_LCD_PIN_NUM_DATA6         
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA7
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA7"
+                default 7
+                help
+                    RGB_LCD_PIN_NUM_DATA7         
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA8
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA8"
+                default 15
+                help
+                    RGB_LCD_PIN_NUM_DATA8          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA9
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA9"
+                default 16
+                help
+                    RGB_LCD_PIN_NUM_DATA9         
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA10
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA10"
+                default 4
+                help
+                    RGB_LCD_PIN_NUM_DATA10          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA11
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA11"
+                default 45
+                help
+                    RGB_LCD_PIN_NUM_DATA11          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA12
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA12"
+                default 48
+                help
+                    RGB_LCD_PIN_NUM_DATA12          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA13
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA13"
+                default 47
+                help
+                    RGB_LCD_PIN_NUM_DATA13          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA14
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA14"
+                default 21
+                help
+                    RGB_LCD_PIN_NUM_DATA14          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DATA15
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DATA15"
+                default 14
+                help
+                    RGB_LCD_PIN_NUM_DATA15          
+                    
+                    
+                config RGB_LCD_PIN_NUM_DISP_EN
+                depends on RGB_LCD
+                int "RGB_LCD_PIN_NUM_DISP_EN"
+                default -1
+                help
+                    RGB_LCD_PIN_NUM_DISP_EN          
+                    
+        
+            config DOUBLE_FB
+                bool "Use double Frame Buffer"
+                depends on RGB_LCD
+                default "n"
+                help
+                    Enable this option, driver will allocate two frame buffers.
+        
+            config USE_BOUNCE_BUFFER
+                depends on RGB_LCD
+                depends on !DOUBLE_FB
+                bool "Use bounce buffer"
+                help
+                    Enable bounce buffer mode can achieve higher PCLK frequency at the cost of higher CPU consumption.
+        
+            config AVOID_TEAR_EFFECT_WITH_SEM
+                depends on RGB_LCD
+                depends on !DOUBLE_FB
+                bool "Avoid tearing effect"
+                default "y"
+                help
+                    Enable this option, the example will use a pair of semaphores to avoid the tearing effect.
+                    Note, if the Double Frame Buffer is used, then we can also avoid the tearing effect without the lock.
+        
+        
+        
+                    
+            config SPI_LCD
+                bool "SPI_LCD"
+                help
+                    LCD con SPI
+        
+                    
+                config LCD_PIXEL_CLOCK_HZ
+                depends on SPI_LCD
+                int "LCD_PIXEL_CLOCK_HZ"
+                default 20000000
+                help
+                    Pin LCD_PIXEL_CLOCK_HZ            
+                    
+                config PIN_NUM_BK_LIGHT
+                depends on SPI_LCD
+                int "PIN_NUM_BK_LIGHT"
+                default 33
+                help
+                    Pin BACKLIGHT
+                    
+                config PIN_SPI_LCD_NUM_SCLK
+                depends on SPI_LCD
+                int "PIN_SPI_LCD_NUM_SCLK"
+                default 25
+                help
+                    Pin SCLK
+        
+                config PIN_SPI_LCD_NUM_MOSI
+                depends on SPI_LCD
+                int "PIN_SPI_LCD_NUM_MOSI"
+                default 26
+                help
+                    Pin MOSI
+                    
+                config PIN_SPI_LCD_NUM_MISO
+                depends on SPI_LCD
+                int "PIN_SPI_LCD_NUM_MISO"
+                default -1
+                help
+                    Pin MISO
+        
+                                
+                config PIN_SPI_LCD_NUM_DC
+                depends on SPI_LCD
+                int "PIN_SPI_LCD_NUM_DC"
+                default 27
+                help
+                    Pin para encender la pantalla
+        
+                    
+                config PIN_SPI_LCD_NUM_LCD_RST
+                depends on SPI_LCD
+                int "PIN_SPI_LCD_NUM_LCD_RST"
+                default 21
+                help
+                    Pin para encender la pantalla
+        
+        
+                    
+                config PIN_SPI_LCD_NUM_LCD_CS
+                depends on SPI_LCD
+                int "PIN_SPI_LCD_NUM_LCD_CS"
+                default 5
+                help
+                    Pin para encender la pantalla
+                    
+                config SPI_LCD_CMD_BITS
+                depends on SPI_LCD
+                int "SPI_LCD_CMD_BITS"
+                default 8
+                help
+                    Numero de bits del comando
+                    
+                config SPI_LCD_PARAM_BITS
+                depends on SPI_LCD
+                int "SPI_LCD_PARAM_BITS"
+                default 8
+                help
+                    Numero de bits de los parametros                        
+                    
+                config SPI_LCD_ILI9341
+                depends on SPI_LCD
+                bool "SPI_LCD_ILI9341"
+                default y
+                help
+                    SPI_LCD_ILI9341   
+                    
+        endchoice
+        
+    endmenu
+            
+
+            
+endmenu
+
+
