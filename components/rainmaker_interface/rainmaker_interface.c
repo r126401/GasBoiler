@@ -22,7 +22,7 @@
 
 static const char *TAG = "rainmaker_interface.c";
 
-esp_rmaker_device_t *thermostat_device;
+esp_rmaker_device_t *gasBoiler_device;
 
 static const char *list_mode[] = {TEXT_STATUS_APP_ERROR, TEXT_STATUS_APP_AUTO, TEXT_STATUS_APP_MANUAL, 
     TEXT_STATUS_APP_STARTING, TEXT_STATUS_APP_CONNECTING, TEXT_STATUS_APP_UPGRADING, TEXT_STATUS_APP_UNDEFINED};
@@ -43,8 +43,8 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
 
 static void assign_primary_param(esp_rmaker_param_t *param) {
 
-    esp_rmaker_device_add_param(thermostat_device, param);
-    esp_rmaker_device_assign_primary_param(thermostat_device, param);
+    esp_rmaker_device_add_param(gasBoiler_device, param);
+    esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
 
 }
 
@@ -86,8 +86,8 @@ void rainmaker_interface_init_environment() {
     }
 
     /* Create the thermostat device*/
-    thermostat_device = esp_rmaker_device_create(ESP_RMAKER_NAME_DEVICE, ESP_RMAKER_DEVICE_THERMOSTAT, NULL);
-    esp_rmaker_device_add_model(thermostat_device, ESP_RMAKER_MODEL_NAME);
+    gasBoiler_device = esp_rmaker_device_create(ESP_RMAKER_NAME_DEVICE, ESP_RMAKER_DEVICE_THERMOSTAT, NULL);
+    esp_rmaker_device_add_model(gasBoiler_device, ESP_RMAKER_MODEL_NAME);
 
     
     /* Definitions of parameters*/
@@ -95,39 +95,45 @@ void rainmaker_interface_init_environment() {
     
     /* name */
     param = esp_rmaker_name_param_create(ESP_RMAKER_DEF_NAME_PARAM, ESP_RMAKER_NAME_DEVICE );
-    assign_primary_param(param);
+    //assign_primary_param(param);
+    esp_rmaker_device_add_param(gasBoiler_device, param);
 
     /* power*/
 
-    param = esp_rmaker_power_param_create(ESP_RMAKER_DEF_POWER_NAME, "relay");
-    assign_primary_param(param);
+    param = esp_rmaker_power_param_create(ESP_RMAKER_DEF_POWER_NAME, false);
+    //assign_primary_param(param);
+    esp_rmaker_device_add_param(gasBoiler_device, param);
+    esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
+
 
 
     /* Setpoint temperature*/
     param = esp_rmaker_param_create(
-        ESP_RMAKER_PARAM_TEMPERATURE, 
+        "temperature", 
         ESP_RMAKER_DEVICE_THERMOSTAT, 
-        esp_rmaker_float(0),
+        esp_rmaker_float(22.5),
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
-        assign_primary_param(param);
+        //assign_primary_param(param);
+        esp_rmaker_device_add_param(gasBoiler_device, param);
 
 
     /* Setpoint temperature*/
     param = esp_rmaker_param_create(
+        "umbral", 
         ESP_RMAKER_PARAM_SETPOINT_TEMPERATURE, 
-        ESP_RMAKER_DEVICE_THERMOSTAT, 
         esp_rmaker_float(ESP_RMAKER_DEFAULT_SETPOINT_TEMPERATURE),
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
-        assign_primary_param(param);
+        esp_rmaker_device_add_param(gasBoiler_device, param);
 
    
     /* Setpoint AC MODE*/
     param = esp_rmaker_param_create(
+        "mode", 
         ESP_RMAKER_PARAM_AC_MODE, 
-        ESP_RMAKER_DEVICE_THERMOSTAT, 
         esp_rmaker_str(TEXT_STATUS_APP_STARTING),
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
         esp_rmaker_param_add_valid_str_list(param, list_mode, 7);
+        esp_rmaker_device_add_param(gasBoiler_device, param);
 
 
     esp_rmaker_system_serv_config_t system_serv_config = {
@@ -141,10 +147,10 @@ void rainmaker_interface_init_environment() {
     /* Add the write callback for the device. We aren't registering any read callback yet as
      * it is for future use.
      */
-    esp_rmaker_device_add_cb(thermostat_device, write_cb, NULL);  
+    esp_rmaker_device_add_cb(gasBoiler_device, write_cb, NULL);  
    
     /* Add this switch device to the node */
-    esp_rmaker_node_add_device(node, thermostat_device);
+    esp_rmaker_node_add_device(node, gasBoiler_device);
 
     /* Enable OTA */
     esp_rmaker_ota_enable_default();
