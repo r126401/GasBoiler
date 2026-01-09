@@ -103,7 +103,7 @@ void rainmaker_interface_init_environment() {
     param = esp_rmaker_power_param_create(ESP_RMAKER_DEF_POWER_NAME, false);
     //assign_primary_param(param);
     esp_rmaker_device_add_param(gasBoiler_device, param);
-    esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
+    //esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
 
 
 
@@ -115,6 +115,7 @@ void rainmaker_interface_init_environment() {
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
         //assign_primary_param(param);
         esp_rmaker_device_add_param(gasBoiler_device, param);
+        esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
 
 
     /* Setpoint temperature*/
@@ -124,6 +125,7 @@ void rainmaker_interface_init_environment() {
         esp_rmaker_float(ESP_RMAKER_DEFAULT_SETPOINT_TEMPERATURE),
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
         esp_rmaker_device_add_param(gasBoiler_device, param);
+        //esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
 
    
     /* Setpoint AC MODE*/
