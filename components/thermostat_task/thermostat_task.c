@@ -294,7 +294,7 @@ static void task_iotThermostat()
 
     
 
-    xEventGroupWaitBits(evt_between_task, EVT_THERMOSTAK_TASK, pdFALSE, pdTRUE, portMAX_DELAY);
+    //xEventGroupWaitBits(evt_between_task, EVT_THERMOSTAK_TASK, pdFALSE, pdTRUE, portMAX_DELAY);
     ESP_LOGI(TAG, "Arrancamos la task del termostato");
     //xEventGroupSetBits(evt_between_task, EVT_RGB_TASK);
 	/**

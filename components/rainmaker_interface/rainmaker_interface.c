@@ -41,12 +41,6 @@ static esp_err_t write_cb(const esp_rmaker_device_t *device, const esp_rmaker_pa
 }
 
 
-static void assign_primary_param(esp_rmaker_param_t *param) {
-
-    esp_rmaker_device_add_param(gasBoiler_device, param);
-    esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
-
-}
 
 
 
@@ -136,6 +130,17 @@ void rainmaker_interface_init_environment() {
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
         esp_rmaker_param_add_valid_str_list(param, list_mode, 7);
         esp_rmaker_device_add_param(gasBoiler_device, param);
+
+    /* Setpoint TEMP CORRECTION*/
+    param = esp_rmaker_param_create(
+        "mode", 
+        ESP_RMAKER_PARAM_AC_MODE, 
+        esp_rmaker_str(TEXT_STATUS_APP_STARTING),
+        PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
+        esp_rmaker_param_add_valid_str_list(param, list_mode, 7);
+        esp_rmaker_device_add_param(gasBoiler_device, param);
+
+
 
 
     esp_rmaker_system_serv_config_t system_serv_config = {

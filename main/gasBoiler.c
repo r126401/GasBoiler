@@ -18,10 +18,10 @@ void app_main(void)
 
     evt_between_task = xEventGroupCreate();
     init_lcdrgb();
-
+    create_task_thermostat();
     rainmaker_interface_init_environment();
 
-    //create_task_thermostat();
+    
 
 
 
