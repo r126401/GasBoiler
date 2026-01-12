@@ -126,7 +126,7 @@ static void receive_lcd_event(event_lcd_t event) {
     switch (event.event_type) {
 
         case UPDATE_TIME:
-            lv_update_time(event.par1, event.par2, event.par3);
+            lv_update_time(event.par1, event.par2);
 
         break;
 

@@ -1,0 +1,148 @@
+
+
+
+
+#define ESP_RMAKER_PARAM_AC_MODE_NAME "Modo"
+#define ESP_RMAKER_PARAM_TEMPERATURE_CORRECTION "esp.param.temp_correction"
+#define ESP_RMAKER_PARAM_TEMPERATURE_CORRECTION_NAME "Calibracion"
+
+
+menu "GAS BOILER PARAMETERS OF DEVICE"
+
+
+
+
+    config ESP_RMAKER_NODE_NAME
+        string  "Device node"
+        default "ESP RainMaker Device"
+        help 
+            Is the name of node
+
+
+    config ESP_RMAKER_NAME_DEVICE
+        string  "Device name"
+        default "Gas Boiler"
+        help 
+            Is the name of device
+
+    config ESP_RMAKER_MODEL_NAME
+        string  "Device model"
+        default "RGB"
+        help 
+            Is the model of device
+
+    menu "Paremeters device"
+        config ESP_RMAKER_TYPE_PARAM_SETPOINT_TEMPERATURE
+            string  "Set point temperature type"
+            default "esp.param.setpoint-temperature"
+            help 
+                Is the type of param set point temperature to work thermostat
+
+        config ESP_RMAKER_TYPE_PARAM_SETPOINT_TEMPERATURE_NAME
+            string  "Set point temperature name"
+            default "Setpoint temperature"
+            help 
+                Is the name of param set point temperature to work thermostat
+
+
+        config ESP_RMAKER_TYPE_PARAM_MODE_NAME
+            string  "Set parameter node name"
+            default "Mode"
+            help 
+                Is the name of param AC_MODE to work thermostat
+
+        config ESP_RMAKER_DEFAULT_SETPOINT_TEMPERATURE
+            int "Default setpoint temperature"
+            default 21
+            help
+                Is the setpoint teperature in factory mode
+        
+        
+        config ESP_RMAKER_PARAM_TEMPERATURE_CORRECTION
+            string  "Set temperature correction type"
+            default "esp.param.temp_correction"
+            help 
+                Is the type of param temperature correction to work thermostat
+
+        config ESP_RMAKER_PARAM_TEMPERATURE_CORRECTION_NAME
+            string  "Set temperature correction name"
+            default "temperature correction"
+            help 
+                Is the temperature correction of thermostat to hw
+
+
+    endmenu
+
+    menu "Estados del dispositivo"
+
+        config TEXT_STATUS_APP_FACTORY
+            string "No configuration status"
+            default "xEF\x81\xB1 NO CONFIGURE"
+            help
+                Is when the Gas Boiler start in mode factory
+
+
+        config TEXT_STATUS_APP_ERROR
+            string "Error status"
+            default "xEF\x81\xB1 ERROR"
+            help
+                Is when the Gas Boiler is error
+
+
+        config TEXT_STATUS_APP_AUTO
+            string "Auto status"
+            default "AUTO"
+            help
+                Is when the Gas Boiler is mode AUTO
+
+        config TEXT_STATUS_APP_MANUAL
+            string "Manual status"
+            default "MANUAL"
+            help
+                Is when the Gas Boiler is mode MANUAL
+
+
+        config TEXT_STATUS_APP_STARTING
+            string "Starting status"
+            default "STARTING"
+            help
+                Is when the Gas Boiler is starting
+
+        config TEXT_STATUS_APP_CONNECTING
+            string "Connecting status"
+            default "xEF\x81\xB1 CONNECTING"
+            help
+                Is when the Gas Boiler is connecting to network or mqtt broker
+
+
+        config TEXT_STATUS_APP_SYNCING
+            string "Syncing status"
+            default "xEF\x81\xB1 SYNCING"
+            help
+                Is when the Gas Boiler is syncing. Is after to connecting
+    
+        config TEXT_STATUS_APP_UPGRADING
+            string "Syncing status"
+            default "xEF\x81\xB1 UPGRADING"
+            help
+                Is when the Gas Boiler is syncing. Is after to connecting
+
+        config TEXT_STATUS_APP_UNKNOWN
+            string "Unknown status"
+            default "xEF\x81\xB1 UNKNOWN"
+            help
+                Is when the Gas Boiler is Unknown
+
+        config TEXT_STATUS_APP_UPGRADING
+            string "Upgrading status"
+            default "xEF\x81\xB1 UPGRADING"
+            help
+                Is when the Gas Boiler is Upgrading
+
+    endmenu
+
+
+
+            
+endmenu
+

@@ -50,6 +50,8 @@ lv_obj_t *icon_heating;
 lv_obj_t *label_text_mode;
 
 lv_timer_t *timer_time;
+lv_timer_t *mytimer;
+
 
 //styles
 
@@ -134,74 +136,30 @@ void lv_update_show_bluetooth(bool action) {
 
 
 
-static bool get_now(uint32_t *hour, uint32_t *min, uint32_t *sec) {
-
-
-	//POSIX_TM_S fecha;
-    //POSIX_TM_S now;
-    //TIME_T hora;
-    //tal_time_get(&now);
-    //hora = tal_time_get_posix();
-    //tal_time_get_local_time_custom(hora, &fecha);
-    //mktime(&now);
-    //time(&now);
-    //localtime_r(&now, &fecha);
-
-    //*hour = fecha.tm_hour;
-    //*min = fecha.tm_min;
-    //*sec = fecha.tm_sec;
-
-    return true;
-
-
-}
 
 
 
 
-static void update_time_cb(lv_timer_t *timer) {
 
-    uint32_t hour = 0;
-    uint32_t min = 0;
-    uint32_t sec = 0;
-    get_now(&hour, &min, &sec);
-    //ESP_LOGI(TAG, "hora actualizada: %02ld:%02ld:%02ld", hour, min, sec);
-    lv_update_time(hour, min, sec);
-    if (sec == 0) {
+/****************************************** Updates functions ***************************************/
 
-        lv_timer_set_period(timer_time, 60000);
-    }
-    
-    //lv_timer_set_period(timer_time, 60000);
-    //lv_timer_ready(timer_time);
+void lv_update_time(int hour, int minute) {
 
+    if (date_text != NULL) {
+
+        if ((hour == -1) || (minute == -1)) {
+            lv_label_set_text(date_text, "NO TIME!");
+            lv_obj_set_style_text_color(date_text, lv_color_hex(LV_COLOR_TEXT_FAIL_NOTIFICATION), LV_PART_MAIN);
+
+         } else {
+            lv_label_set_text_fmt(date_text, "%.02d:%.02d", hour, minute);
+             lv_obj_set_style_text_color(date_text, lv_color_hex(LV_COLOR_DATE), LV_PART_MAIN);
 
 
 
-}
-
-
-void lv_update_time(int hour, int minute, int seconds) {
-
-    char date[6] = {0};
-
-    sprintf(date, "%02d:%02d", hour, minute);
-
-    if ((hour == -1) || (minute == -1)) {
-        lv_label_set_text(date_text, "NO TIME!");
-        lv_obj_set_style_text_color(date_text, lv_color_hex(LV_COLOR_TEXT_FAIL_NOTIFICATION), LV_PART_MAIN);
-
-    } else {
-        lv_label_set_text_fmt(date_text, "%.02d:%.02d", hour, minute);
-        lv_obj_set_style_text_color(date_text, lv_color_hex(LV_COLOR_DATE), LV_PART_MAIN);
-        if (timer_time == NULL) {
-            uint32_t delay;
-            timer_time = lv_timer_create(update_time_cb, 60000, date);
-            lv_timer_reset(timer_time);
-            lv_timer_set_period(timer_time, (60 - seconds) * 1000);
-            
-            lv_timer_ready(timer_time);
         }
+
+       
 
     }
 
@@ -291,7 +249,7 @@ static void create_layout_notification() {
 	configure_style_layout_notification();
 
 	date_text = lv_label_create(screen_main_thermostat);
-	lv_update_time(-1, -1, -1);
+	lv_update_time(-1, -1);
 	lv_label_set_long_mode(date_text, 3);
 	lv_obj_set_pos(date_text, CONFIG_LCD_H_RES/2, 0);
 
@@ -500,17 +458,17 @@ static void lv_event_handler_button_up(lv_event_t *event) {
 
 
     } else {
-        //lv_timer_delete(mytimer);
-        //mytimer = NULL;
+        lv_timer_delete(mytimer);
+        mytimer = NULL;
     }
 
-    //mytimer = lv_timer_create(timer_cb, 3000, &threshold);
-    //lv_timer_set_repeat_count(mytimer, 1);
+    mytimer = lv_timer_create(timer_cb, 3000, &threshold);
+    lv_timer_set_repeat_count(mytimer, 1);
 
 
 
 
-    //lv_update_threshold_temperature(threshold);
+    lv_update_threshold_temperature(threshold);
 
 
 
@@ -587,14 +545,14 @@ static void lv_event_handler_button_down(lv_event_t *event) {
 
 
     } else {
-        //lv_timer_delete(mytimer);
-        //mytimer = NULL;
+        lv_timer_delete(mytimer);
+        mytimer = NULL;
     }
 
-    //mytimer = lv_timer_create(timer_cb, 3000, &threshold);
-    //lv_timer_set_repeat_count(mytimer, 1);
+    mytimer = lv_timer_create(timer_cb, 3000, &threshold);
+    lv_timer_set_repeat_count(mytimer, 1);
 
-    //lv_update_threshold_temperature(threshold);
+    lv_update_threshold_temperature(threshold);
 
 
 
@@ -707,11 +665,11 @@ static void create_label_text_mode() {
 
 void create_screen() {
 
-    timer_time = NULL;
+    mytimer = NULL;
 	init_main_screen();
 	create_text_version("1.0");
-    
 	create_layout_notification();
+    lv_update_time(-1, -1);
 	configure_style_buttons_threshold();
 	create_button_reset();
 	create_layout_temperature();

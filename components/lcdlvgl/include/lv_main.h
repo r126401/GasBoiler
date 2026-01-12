@@ -22,7 +22,7 @@ void create_screen();
 void lv_update_show_wifi(bool action);
 void lv_update_show_broker(bool action);
 void lv_update_show_bluetooth(bool action);
-void lv_update_time(int hour, int min, int seconds);
+void lv_update_time(int hour, int min);
 void lv_update_text_mode(char *mode);
 void lv_update_label_mode(char *status);
 void lv_update_temperature(float temperature);
