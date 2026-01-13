@@ -9,6 +9,13 @@
 #include <esp_event.h>
 #include <nvs_flash.h>
 #include "esp_err.h"
+#include "esp_wifi.h"
+
+#include <esp_event.h>
+#include <nvs_flash.h>
+
+
+
 
 #include "esp_rmaker_schedule.h"
 #include "esp_rmaker_scenes.h"
@@ -21,13 +28,87 @@
 #include "esp_rmaker_console.h"
 #include "esp_rmaker_ota.h"
 #include "app_network.h"
+#include "esp_rmaker_utils.h"
+
+#include "lv_main.h"
+#include "rainmaker_events.h"
 
 static const char *TAG = "rainmaker_interface.c";
-
+char *text_qrcode;
 esp_rmaker_device_t *gasBoiler_device;
+
+
+
+
+
+void event_handler_sync (struct timeval *tv) {
+
+    ESP_LOGE(TAG, "Evento de sincronizacion");
+
+
+
+    sntp_sync_status_t sync_status = sntp_get_sync_status();
+
+
+   ESP_LOGE(TAG, "SYNSTATUS ES %d", sync_status);
+
+   switch (sync_status) {
+
+    case SNTP_SYNC_STATUS_RESET:
+        ESP_LOGW(TAG, "La sincronizacion esta en estado reset");
+        break;
+
+    case SNTP_SYNC_STATUS_COMPLETED:
+        ESP_LOGI(TAG, "La sincronizacion esta completada");
+        update_time_valid(true);
+
+
+
+        break;
+
+
+    case SNTP_SYNC_STATUS_IN_PROGRESS:  
+        ESP_LOGE(TAG, "La sincronizacion esta en progreso");
+        //set_alarm(NTP_ALARM, ALARM_APP_ON);
+
+    break; // Smooth time sync in progress.
+    
+   }
+
+}
+
+
 
 static const char *list_mode[] = {CONFIG_TEXT_STATUS_APP_ERROR, CONFIG_TEXT_STATUS_APP_AUTO, CONFIG_TEXT_STATUS_APP_MANUAL, 
     CONFIG_TEXT_STATUS_APP_STARTING, CONFIG_TEXT_STATUS_APP_CONNECTING, CONFIG_TEXT_STATUS_APP_UPGRADING, CONFIG_TEXT_STATUS_APP_UNKNOWN};
+
+/* Event handler for catching RainMaker events */
+static void event_handler_wifi(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+
+    switch (event_id)
+    {
+    case IP_EVENT_STA_GOT_IP:
+    case IP_EVENT_ETH_GOT_IP:
+        ESP_LOGE(TAG, "Se ha obtenido direccion ip y estamos conectados a internet. Event id: %d", event_id);
+        notify_wifi_status(true);
+        
+        break;
+    
+    case IP_EVENT_STA_LOST_IP:
+    case IP_EVENT_ETH_LOST_IP:
+        ESP_LOGE(TAG, "Se ha perdido la señal wifi. Event id: %d", event_id);
+        notify_wifi_status(false);
+        notify_mqtt_status(false);
+
+        break;
+    
+    default:
+        break;
+    }
+
+    ESP_LOGE(TAG, "Recibido evento de wifi %s, id: %d", event_base, event_id);
+
+}
 
 
 
@@ -39,6 +120,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         switch (event_id) {
             case RMAKER_EVENT_INIT_DONE:
                 ESP_LOGI(TAG, "event_handler_RainMaker Initialised.");
+                notify_device_started();
                 break;
             case RMAKER_EVENT_CLAIM_STARTED:
                 ESP_LOGI(TAG, "event_handler_RainMaker Claim Started.");
@@ -71,9 +153,11 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                 break;
             case RMAKER_MQTT_EVENT_CONNECTED:
                 ESP_LOGI(TAG, "event_handler_MQTT Connected.");
+                notify_mqtt_status(true);
                 break;
             case RMAKER_MQTT_EVENT_DISCONNECTED:
                 ESP_LOGI(TAG, "event_handler_MQTT Disconnected.");
+                notify_mqtt_status(false);
                 break;
             case RMAKER_MQTT_EVENT_PUBLISHED:
                 ESP_LOGI(TAG, "event_handler_MQTT Published. Msg id: %d.", *((int *)event_data));
@@ -85,6 +169,13 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         switch (event_id) {
             case APP_NETWORK_EVENT_QR_DISPLAY:
                 ESP_LOGI(TAG, "event_handler_Provisioning QR : %s", (char *)event_data);
+                if (text_qrcode == NULL) {
+                    text_qrcode = (char*) calloc(strlen(event_data) + 1, sizeof(char));
+                }
+                strncpy(text_qrcode, event_data, strlen(event_data));
+
+                provisioning_device(text_qrcode);
+
                 break;
             case APP_NETWORK_EVENT_PROV_TIMEOUT:
                 ESP_LOGI(TAG, "event_handler_Provisioning Timed Out. Please reboot.");
@@ -240,9 +331,9 @@ void rainmaker_interface_init_environment() {
     ESP_ERROR_CHECK(esp_event_handler_register(RMAKER_COMMON_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(APP_NETWORK_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(RMAKER_OTA_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler_wifi, NULL));
 
 
-    
     /* Initialize the ESP RainMaker Agent.
      * Note that this should be called after app_network_init() but before app_network_start()
      * */
@@ -380,10 +471,12 @@ void rainmaker_interface_init_environment() {
     } else {
 
         //set_lcd_update_wifi_status(true);
-        //set_alarm(WIFI_ALARM, ALARM_APP_OFF);
-        
+        //set_alarm(WIFI_ALARM, ALARM_APP_OFF);   
     }
 
+
+
+sntp_set_time_sync_notification_cb(event_handler_sync);
 
 
 

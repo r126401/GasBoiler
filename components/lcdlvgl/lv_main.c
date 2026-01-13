@@ -17,6 +17,7 @@
 #include "styles.h"
 #include "time.h"
 #include "esp_log.h"
+#include "rainmaker_events.h"
 
 
 static char *TAG = "lv_main.c";
@@ -306,8 +307,8 @@ static void event_handler_button_main_reset(lv_event_t *event) {
     /**
      * Rutina para tratar el reset del dispositivo
      */
-	printf("reset");
-    //reset_device();
+	ESP_LOGW(TAG, "reboot...");
+    reset_device();
 
 }
 
@@ -318,7 +319,8 @@ static void event_handler_button_factory_reset(lv_event_t *event) {
      */
 
     //reset_device();
-	printf("factory reset");
+    factory_reset_device();
+	ESP_LOGW(TAG, "Factory reset...");
 
 }
 
@@ -677,9 +679,36 @@ void create_screen() {
 	create_layout_buttons_threshold();
 	create_heating_icon();
 	create_label_text_mode();
+    lv_update_text_mode(CONFIG_TEXT_STATUS_APP_UNKNOWN);
     ESP_LOGI(TAG, "Creada la pantalla principal");
     
 }
 
 
+void lv_paint_qr_code(char *qrcode) {
 
+    // Tamaño del código QR y color
+uint16_t qr_size = 80; // Tamaño en píxeles
+//lv_color_t qr_fg_color = lv_color_white(); // Color de los píxeles del QR
+//lv_color_t qr_bg_color = lv_color_black(); // Color de fondo del QR
+
+// Crear el objeto QR code
+lv_obj_t *qr = lv_qrcode_create(screen_main_thermostat);
+
+
+
+lv_qrcode_set_size(qr, qr_size);
+lv_obj_set_pos(qr, 5,160);
+
+
+// Posición en pantalla (opcional)
+//lv_obj_align(qr, LV_ALIGN_CENTER, 0, 0);
+
+ESP_LOGI(TAG, "qrcode:%s", qrcode);
+
+// Actualizar el QR code con el contenido
+lv_qrcode_update(qr, qrcode, strlen(qrcode));
+lv_obj_invalidate(qr);
+
+
+}

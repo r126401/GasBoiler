@@ -29,6 +29,7 @@ void lv_update_temperature(float temperature);
 void lv_update_heating(bool status);
 void lv_update_threshold_temperature(float threshold);
 void lv_update_button_mode(bool enable);
+void lv_paint_qr_code(char *qrcode);
 
 
 

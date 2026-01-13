@@ -133,12 +133,6 @@ menu "GAS BOILER PARAMETERS OF DEVICE"
             help
                 Is when the Gas Boiler is Unknown
 
-        config TEXT_STATUS_APP_UPGRADING
-            string "Upgrading status"
-            default "xEF\x81\xB1 UPGRADING"
-            help
-                Is when the Gas Boiler is Upgrading
-
     endmenu
 
 
