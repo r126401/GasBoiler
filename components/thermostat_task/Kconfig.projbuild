@@ -1,0 +1,40 @@
+menu "THERMOSTAT PARAMETERS PARAMETERS OF DEVICE"
+
+
+
+
+    config ONEWIRE_MAX_DS18B20
+        int  "Number of sensors"
+        default 1
+        help 
+            Is the number of sensors in the same bus
+
+
+    config SENSOR_THERMOSTAT_GPIO
+        int  "GPIO to read temperature from sensor"
+        default "17"
+        help 
+            Is the GPIO used to red temperature from sensor
+
+    config CONFIG_RELAY_GPIO
+        int  "GPIO to activate Gas Boiler"
+        default 10
+        help 
+            Is the GPIO used to activate relay of Gas Boiler
+
+    config ERROR_READING_TEMPERATURE
+        int "Number of errors max to read sensor"
+        default 3
+        help
+            Is the max number or retrys consecutives before to report alarm
+
+    config DEFAULT_SETPOINT_TEMPERATURE
+        int "Factory setpoint tempoerature"
+        default 21
+        help
+            Is the default setpoint temperature when the device is factory state
+
+
+            
+endmenu
+
