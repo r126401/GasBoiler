@@ -2,7 +2,8 @@
 
 
 #include "rainmaker_events.h"
-#include "lv_main.h"
+//#include "lv_main.h"
+#include "events_lcd.h"
 #include "esp_log.h"
 #include "time.h"
 #include "esp_timer.h"
@@ -25,10 +26,15 @@ const esp_timer_create_args_t text_date_shot_timer_args = {
  */
 
 void  provisioning_device(char *register_data) {
+
+
     
-    lv_paint_qr_code(register_data);
-    lv_update_show_bluetooth(true);
-    lv_update_text_mode(CONFIG_TEXT_STATUS_APP_FACTORY);
+    //lv_paint_qr_code(register_data);
+    set_lcd_update_qr_confirmed(register_data);
+    set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_FACTORY);
+    set_lcd_update_bluetooth(true);
+    //lv_update_show_bluetooth(true);
+    //lv_update_text_mode(CONFIG_TEXT_STATUS_APP_FACTORY);
 
 
 }
@@ -36,7 +42,8 @@ void  provisioning_device(char *register_data) {
 void notify_wifi_status(bool status) {
 
     ESP_LOGI(TAG, "Status wifi: %d", status);
-    lv_update_show_wifi(status);
+    //lv_update_show_wifi(status);
+    set_lcd_update_wifi_status(status);
 
 
 }
@@ -44,7 +51,8 @@ void notify_wifi_status(bool status) {
 void notify_mqtt_status(bool status) {
 
     ESP_LOGI(TAG, "Status mqtt: %d", status);
-    lv_update_show_broker(true);
+    //lv_update_show_broker(true);
+    set_lcd_update_broker_status(true);
 
 }
 
@@ -54,7 +62,8 @@ void notify_mqtt_status(bool status) {
 void notify_device_started() {
 
     ESP_LOGI(TAG, "device initied");
-    lv_update_text_mode(CONFIG_TEXT_STATUS_APP_STARTING);
+    //lv_update_text_mode(CONFIG_TEXT_STATUS_APP_STARTING);
+    set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_STARTING);
 
 
 
@@ -91,12 +100,14 @@ void time_refresh(void *arg) {
     if (esp_sntp_get_sync_status() == SNTP_SYNC_STATUS_IN_PROGRESS) {
 
 
-        lv_update_time(-1,-1);
+        //lv_update_time(-1,-1);
+        set_lcd_update_time(-1, -1, 0);
         ESP_LOGI(TAG, "Hora invalida");
         interval = 60;
     } else {
         get_now(&hour, &min, &sec);
-        lv_update_time(hour, min);
+        //lv_update_time(hour, min);
+        set_lcd_update_time(hour, min, 0);
         interval = 60 - sec;
 
         
@@ -140,7 +151,8 @@ void update_time_valid(bool timevalid) {
             ESP_LOGI(TAG, "Actualizada la hora: %02d:%02d. Proximo intervalo :%d segundos", (int) hour, (int) min, (int) resto);
 
             sync = true;
-            lv_update_time(hour, min);
+            //lv_update_time(hour, min);
+            set_lcd_update_time(hour, min, 0);
 /*
             if (get_app_status() == STATUS_APP_AUTO) {
                 lv_update_lcd_schedule(true);
@@ -151,7 +163,8 @@ void update_time_valid(bool timevalid) {
         } 
 
     } else {
-        lv_update_time(-1,-1);
+        //lv_update_time(-1,-1);
+        set_lcd_update_time(-1, -1, 0);
         //set_lcd_update_time(-1, -1);
     }
 

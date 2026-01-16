@@ -50,7 +50,7 @@ void set_lcd_update_label_mode(char *mode);
 void set_lcd_update_temperature(float temperature);
 void set_lcd_update_wifi_status(bool status);
 void set_lcd_update_broker_status(bool status);
-void set_lcd_update_bluetooth_status(bool status);
+void set_lcd_update_bluetooth(bool status);
 void set_lcd_update_heating(bool status);
 void set_lcd_update_threshold_temperature(float threshold);
 void set_lcd_update_schedule(bool status, int par1, int par2, int par3);

@@ -197,6 +197,7 @@ static void receive_lcd_event(event_lcd_t event) {
         case UPDATE_PERCENT:
 
         //lv_update_percent(event.par1);
+        lv_paint_qr_code(event.text);
         
         break;
 
@@ -311,6 +312,8 @@ void set_lcd_update_time(int par1, int par2, int par3) {
     update_lcd_int(UPDATE_TIME, par1, par2, par3, true);
 
 }
+
+
 void set_lcd_update_text_mode(char *text_mode) {
 
     update_lcd_char(UPDATE_TEXT_MODE, text_mode);
@@ -338,7 +341,7 @@ void set_lcd_update_broker_status(bool status) {
 
 }
 
-void set_lcd_update_bluetooth_status(bool status) {
+void set_lcd_update_bluetooth(bool status) {
 
     update_lcd_bool(UPDATE_BLUETOOTH_STATUS, status);
 }
@@ -349,6 +352,7 @@ void set_lcd_update_heating(bool status) {
     update_lcd_bool(UPDATE_HEATING, status);
 
 }
+
 void set_lcd_update_threshold_temperature(float threshold) {
 
     update_lcd_float(UPDATE_THRESHOLD_TEMPERATURE, threshold);
@@ -402,4 +406,9 @@ void set_lcd_update_error_factory() {
 void set_lcd_update_button_instalation(bool show) {
 
     update_lcd_bool(UPDATE_BUTTON_INSTALATION, show);
+}
+
+void set_lcd_qr_confirmed(char *register_data) {
+
+    update_lcd_char(QR_CONFIRMED, register_data);
 }

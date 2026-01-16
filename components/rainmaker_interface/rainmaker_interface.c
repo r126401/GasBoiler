@@ -32,11 +32,107 @@
 
 #include "lv_main.h"
 #include "rainmaker_events.h"
+#include "events_lcd.h"
 
 static const char *TAG = "rainmaker_interface.c";
 char *text_qrcode;
 esp_rmaker_device_t *gasBoiler_device;
 
+float current_setpoint_temperature = -100;
+
+void notify_current_temperature(float current_temperature) {
+
+
+    esp_rmaker_param_t *param;
+
+    set_lcd_update_temperature(current_temperature);
+    ESP_LOGI(TAG, "Enviada la temperatura al display");
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, ESP_RMAKER_DEF_TEMPERATURE_NAME);
+    if (param != NULL) {
+        esp_rmaker_param_update_and_report(param, esp_rmaker_float(current_temperature));
+    } else {
+        ESP_LOGW(TAG, "Rmaker no activo, No se reporta el valor de la temperatura");
+    }
+
+}
+
+void notify_sensor_fail() {
+
+
+    esp_rmaker_param_update_and_notify(esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_PARAM_ALARM_NAME), esp_rmaker_str(CONFIG_ESP_RMAKER_PARAM_ALARM_SENSOR_FAIL));
+}
+
+float get_current_temperature() {
+
+    esp_rmaker_param_t *param;
+    float temperature;
+
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, ESP_RMAKER_DEF_TEMPERATURE_NAME);
+    if (param != NULL) {
+
+        temperature = esp_rmaker_param_get_val(param)->val.f;
+    } else {
+        temperature = INVALID_TEMPERATURE;
+    }
+
+    return temperature;
+		
+}
+
+
+float get_setpoint_temperature() {
+
+    esp_rmaker_param_t *param;
+
+    if (current_setpoint_temperature == -100) {
+        //value in factory reset
+        current_setpoint_temperature = CONFIG_DEFAULT_SETPOINT_TEMPERATURE;
+    } else {
+        param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_TYPE_PARAM_SETPOINT_TEMPERATURE_NAME);
+        if (param != NULL) {
+            current_setpoint_temperature = esp_rmaker_param_get_val(param)->val.f;
+        }
+    }
+
+    ESP_LOGI(TAG, "Setpoint_temperature es %.1f", current_setpoint_temperature);
+    
+    return current_setpoint_temperature;
+}
+
+int get_read_interval() {
+
+    esp_rmaker_param_t *param;
+    int read_interval;
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_PARAM_READ_INTERVAL_NAME);
+    if (param != NULL) {
+        read_interval = esp_rmaker_param_get_val(param)->val.i;
+    } else {
+        read_interval = DEFAULT_READ_INTERVAL;
+    }
+    
+
+    return read_interval;
+
+
+}
+
+
+
+void set_config_offline() {
+
+
+}
+
+void set_config_online() {
+
+
+
+}
+
+STATUS_GAS_BOILER get_status_gas_boiler() {
+
+    return STATUS_APP_AUTO;
+}
 
 
 
@@ -44,13 +140,9 @@ esp_rmaker_device_t *gasBoiler_device;
 void event_handler_sync (struct timeval *tv) {
 
     ESP_LOGE(TAG, "Evento de sincronizacion");
-
-
-
     sntp_sync_status_t sync_status = sntp_get_sync_status();
-
-
-   ESP_LOGE(TAG, "SYNSTATUS ES %d", sync_status);
+    
+    ESP_LOGI(TAG, "SYNSTATUS ES %d", sync_status);
 
    switch (sync_status) {
 
@@ -61,9 +153,6 @@ void event_handler_sync (struct timeval *tv) {
     case SNTP_SYNC_STATUS_COMPLETED:
         ESP_LOGI(TAG, "La sincronizacion esta completada");
         update_time_valid(true);
-
-
-
         break;
 
 
@@ -96,6 +185,7 @@ static void event_handler_wifi(void* arg, esp_event_base_t event_base, int32_t e
     
     case IP_EVENT_STA_LOST_IP:
     case IP_EVENT_ETH_LOST_IP:
+    case WIFI_EVENT_STA_BEACON_TIMEOUT:
         ESP_LOGE(TAG, "Se ha perdido la señal wifi. Event id: %d", event_id);
         notify_wifi_status(false);
         notify_mqtt_status(false);
@@ -103,6 +193,7 @@ static void event_handler_wifi(void* arg, esp_event_base_t event_base, int32_t e
         break;
     
     default:
+    ESP_LOGW(TAG, "El evento %d no se esta tratando en el event_handler_wifi ", event_id);
         break;
     }
 
@@ -369,9 +460,9 @@ void rainmaker_interface_init_environment() {
 
 
 
-    /* Setpoint temperature*/
+    /* temperature*/
     param = esp_rmaker_param_create(
-        "temperature", 
+        ESP_RMAKER_DEF_TEMPERATURE_NAME, 
         ESP_RMAKER_DEVICE_THERMOSTAT, 
         esp_rmaker_float(22.5),
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
@@ -412,6 +503,24 @@ void rainmaker_interface_init_environment() {
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
         esp_rmaker_device_add_param(gasBoiler_device, param);
 
+
+        /* Alarm param*/
+
+    param = esp_rmaker_param_create(
+        CONFIG_ESP_RMAKER_PARAM_ALARM_NAME, 
+        CONFIG_ESP_RMAKER_PARAM_ALARM,
+        esp_rmaker_str(DEFAULT_ALARM),
+        PROP_FLAG_READ);
+        esp_rmaker_device_add_param(gasBoiler_device, param);
+
+       /* Read interval param*/
+
+    param = esp_rmaker_param_create(
+        CONFIG_ESP_RMAKER_PARAM_READ_INTERVAL_NAME, 
+        CONFIG_ESP_RMAKER_PARAM_READ_INTERVAL,
+        esp_rmaker_int(DEFAULT_READ_INTERVAL),
+        PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
+        esp_rmaker_device_add_param(gasBoiler_device, param);
 
 
 

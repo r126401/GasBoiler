@@ -18,6 +18,7 @@
 #include "time.h"
 #include "esp_log.h"
 #include "rainmaker_events.h"
+#include "rainmaker_interface.h"
 
 
 static char *TAG = "lv_main.c";
@@ -359,7 +360,7 @@ static void create_layout_threshold() {
 	lv_obj_align_to(text_threshold, icon_threshold, LV_ALIGN_OUT_RIGHT_MID, 10, 0);
     //lv_update_threshold_temperature(current_threshold);
 	//lv_obj_set_pos(text_threshold, 20, 10);
-    lv_label_set_text(text_threshold, "25.1 ºC");
+    lv_label_set_text(text_threshold, ".... ºC");
 	lv_obj_set_size(layout_threshold, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
 
 
@@ -675,7 +676,9 @@ void create_screen() {
 	configure_style_buttons_threshold();
 	create_button_reset();
 	create_layout_temperature();
+    lv_update_temperature(0.0);
 	create_layout_threshold();
+    lv_update_threshold_temperature(get_setpoint_temperature());
 	create_layout_buttons_threshold();
 	create_heating_icon();
 	create_label_text_mode();

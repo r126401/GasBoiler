@@ -1,5 +1,7 @@
 
 #include "thermostat_task.h"
+#include "rainmaker_interface.h"
+#include "events_lcd.h"
 #include "esp_err.h"
 #include "stdbool.h"
 
@@ -12,25 +14,25 @@
 #include "esp_rom_sys.h"
 #include "esp_log.h"
 
-#include "events_app.h"
+//#include "events_app.h"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
 
-#include "lv_main.h"
+//#include "lv_main.h"
 
 
 extern EventGroupHandle_t evt_between_task;
 
 
 
-#define ONEWIRE_MAX_DS18B20 1
-#define CONFIG_SENSOR_THERMOSTAT_GPIO 17
-#define CONFIG_RELAY_GPIO 10
+//#define ONEWIRE_MAX_DS18B20 1
+//#define CONFIG_SENSOR_THERMOSTAT_GPIO 17
+//#define CONFIG_RELAY_GPIO 10
 static const char *TAG = "thermostat_task";
 //TaskHandle_t thermostat_handle = NULL;
-ds18b20_device_handle_t ds18b20s[ONEWIRE_MAX_DS18B20];
+ds18b20_device_handle_t ds18b20s[CONFIG_ONEWIRE_MAX_DS18B20];
 
 
 
@@ -101,7 +103,9 @@ enum STATUS_RELAY relay_operation(STATUS_RELAY op) {
 static enum THERMOSTAT_ACTION calcular_accion_termostato(STATUS_RELAY *accion, float current_temperature) {
 
 	float margin_temperature = 0.5;
-	float threshold_temperature = 21.5; // Es el umbral de temperatura para calcular la accion del termostato.
+	float threshold_temperature; // Es el umbral de temperatura para calcular la accion del termostato.
+
+    threshold_temperature = get_setpoint_temperature();
 
 
     
@@ -149,11 +153,16 @@ THERMOSTAT_ACTION thermostat_action(float current_temperature) {
 
 	ESP_LOGI(TAG, "Estamos en thermostat_action");
 
-    if ((get_thermostat_mode() == MODE_MANUAL) || (get_thermostat_mode() == MODE_ERROR)) {
-        ESP_LOGW(TAG, "No se hace nada ya que tenemos el termostato en modo manual");
-        return NO_ACTION_THERMOSTAT;
+   STATUS_GAS_BOILER status;
 
+    status = get_status_gas_boiler();
+
+    if (get_status_gas_boiler() == STATUS_APP_MANUAL) {
+
+        return NO_ACTION_THERMOSTAT;
     }
+
+    temperature = get_current_temperature();
 
 	ESP_LOGI(TAG, "accionar_termostato: LECTURA ANTERIOR: %.2f, LECTURA POSTERIOR: %.2f HA HABIDO CAMBIO DE TEMPERATURA", 
 			temperature, current_temperature);
@@ -280,67 +289,52 @@ esp_err_t reading_local_temperature(float *current_temperature) {
 
 
 
-static void task_iotThermostat() 
+void task_iotThermostat() 
 {
 
 	esp_err_t error = ESP_OK ;
-	int value;
-	char* id_sensor;
 	static uint8_t n_errors = 0;
 	float current_temperature;
-    int value_dp;
-	//event_lcd_t event;
-	//event.event_type = UPDATE_TEMPERATURE;
+    uint16_t read_interval;
 
-    
 
-    //xEventGroupWaitBits(evt_between_task, EVT_THERMOSTAK_TASK, pdFALSE, pdTRUE, portMAX_DELAY);
-    ESP_LOGI(TAG, "Arrancamos la task del termostato");
-    //xEventGroupSetBits(evt_between_task, EVT_RGB_TASK);
 	/**
 	 * init driver ds18b20
 	 */
 
 	relay_operation(false);
-
-	
 	init_ds18b20();
-
-    while (1) {
-
-        ESP_LOGI(TAG, " Leemos temperatura en local");
+    ESP_LOGI(TAG, "COMIENZA LA TAREA DE LECTURA DE TEMPERATURA");
+    read_interval = get_read_interval();
+    while(1) {
+        ESP_LOGW(TAG, "Leemos temperatura en local");
         error = reading_local_temperature(&current_temperature);
         if (error == ESP_OK) {
 
-            //set_lcd_update_temperature(current_temperature);
-            lv_update_temperature(current_temperature);
-            value_dp = (int) (current_temperature*10);
-            ESP_LOGI(TAG, "El resultado del envio del dp ha sido %d, y la temperatura: %d", error, value_dp);
-            //error = send_value_dp(CURRENT_TEMPERATURE, value_dp);
+            n_errors = 0;
+            notify_current_temperature(current_temperature);
+            vTaskDelay(read_interval * 1000 / portTICK_PERIOD_MS);
         
+        } else {
+            n_errors++;
+			if (n_errors > CONFIG_ERROR_READING_TEMPERATURE) {
+				ESP_LOGE(TAG, "Llevamos %d errores de lectura consecutivos", n_errors);
+                notify_sensor_fail();
+				
 
-            ESP_LOGI(TAG, "Enviada la temperatura al display");
-            vTaskDelay(30 * 1000 / portTICK_PERIOD_MS);
-             //esp_rom_delay_us(300000 * 1000);
-           
-            
+			} else {
+                ESP_LOGE(TAG, "%ud Errores al leer la temperatura del dispositivo. Reintentamos en %d segundos", n_errors, read_interval/2);
+                vTaskDelay((read_interval/2) * 1000 / portTICK_PERIOD_MS);
 
+            }	
         }
 
-			
-
+	}
 	
-    }
-   
-	
-
-    vTaskDelete(NULL);
-
-
-
-
 	
 }
+
+
 
 
 

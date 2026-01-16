@@ -1,6 +1,9 @@
 
 
 
+#define READ_INTERVAL 60;
+
+
 void create_task_thermostat();
 
 typedef enum STATUS_RELAY {
