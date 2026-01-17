@@ -10,7 +10,7 @@ idf_component_register(SRCS
 "rgblcd.c"
 INCLUDE_DIRS 
 "include" 
-PRIV_REQUIRES lvgl__lvgl espressif__esp_lcd_touch atanisoft__esp_lcd_touch_xpt2046 esp_timer events_app espressif__qrcode rainmaker_interface
+PRIV_REQUIRES lvgl__lvgl espressif__esp_lcd_touch atanisoft__esp_lcd_touch_xpt2046 esp_timer espressif__qrcode rainmaker_interface app_interface
 
 )
 

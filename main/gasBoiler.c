@@ -9,6 +9,7 @@
 #include "GasBoiler.h"
 #include "thermostat_task.h"
 #include "rainmaker_interface.h"
+#include "app_interface.h"
 
 EventGroupHandle_t evt_between_task;
 
@@ -19,7 +20,8 @@ void app_main(void)
     evt_between_task = xEventGroupCreate();
     init_lcdrgb();
     create_task_thermostat();
-    rainmaker_interface_init_environment();
+    init_app_environment();
+    //rainmaker_interface_init_environment();
 
     
 

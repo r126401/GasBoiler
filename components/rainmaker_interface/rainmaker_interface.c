@@ -1,6 +1,7 @@
 
 
 #include "rainmaker_interface.h"
+#include "app_interface.h"
 #include <string.h>
 #include <inttypes.h>
 #include <freertos/FreeRTOS.h>
@@ -36,6 +37,16 @@
 
 static const char *TAG = "rainmaker_interface.c";
 char *text_qrcode;
+
+static const char *list_mode[] = {
+    CONFIG_TEXT_STATUS_APP_ERROR, 
+    CONFIG_TEXT_STATUS_APP_AUTO, 
+    CONFIG_TEXT_STATUS_APP_MANUAL, 
+    CONFIG_TEXT_STATUS_APP_STARTING, 
+    CONFIG_TEXT_STATUS_APP_CONNECTING, 
+    CONFIG_TEXT_STATUS_APP_UPGRADING, 
+    CONFIG_TEXT_STATUS_APP_UNKNOWN};
+
 esp_rmaker_device_t *gasBoiler_device;
 
 float current_setpoint_temperature = -100;
@@ -58,8 +69,16 @@ void notify_current_temperature(float current_temperature) {
 
 void notify_sensor_fail() {
 
-
-    esp_rmaker_param_update_and_notify(esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_PARAM_ALARM_NAME), esp_rmaker_str(CONFIG_ESP_RMAKER_PARAM_ALARM_SENSOR_FAIL));
+    esp_rmaker_param_t *param;
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_PARAM_ALARM_NAME);
+    if (param != NULL) {
+        ESP_LOGW(TAG, "Alarma de sensor en fallo. Se envia el fallo a la cloud");
+        esp_rmaker_param_update_and_notify(param, esp_rmaker_str(CONFIG_ESP_RMAKER_PARAM_ALARM_SENSOR_FAIL));
+    } else {
+        ESP_LOGE(TAG, "No se ha podido enviar el fallo a la cloud");
+    }
+    set_lcd_update_icon_errors(true);
+   
 }
 
 float get_current_temperature() {
@@ -74,6 +93,8 @@ float get_current_temperature() {
     } else {
         temperature = INVALID_TEMPERATURE;
     }
+
+    ESP_LOGI(TAG, "Temperatura enviada por la cloud: %.1f", temperature);
 
     return temperature;
 		
@@ -94,7 +115,7 @@ float get_setpoint_temperature() {
         }
     }
 
-    ESP_LOGI(TAG, "Setpoint_temperature es %.1f", current_setpoint_temperature);
+    ESP_LOGI(TAG, "Setpoint_temperature: %.1f", current_setpoint_temperature);
     
     return current_setpoint_temperature;
 }
@@ -109,32 +130,37 @@ int get_read_interval() {
     } else {
         read_interval = DEFAULT_READ_INTERVAL;
     }
-    
 
+    ESP_LOGI(TAG, "Intervalo de lectura: %d segundos", read_interval);
     return read_interval;
 
 
 }
 
 
-
-void set_config_offline() {
-
-
-}
-
-void set_config_online() {
-
-
-
-}
-
-STATUS_GAS_BOILER get_status_gas_boiler() {
+status_app_t get_status_gas_boiler() {
 
     return STATUS_APP_AUTO;
 }
 
+float get_temperature_correction() {
 
+    float temperature_correction = DEFAULT_TEMPERATURE_CORRECTION;
+    
+    esp_rmaker_param_t *param;
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_PARAM_TEMPERATURE_CORRECTION_NAME);
+    if (param != NULL) {
+        temperature_correction = esp_rmaker_param_get_val(param)->val.f;
+
+    } else {
+        ESP_LOGW(TAG, "Calibracion fallida desde la cloud");
+    }
+
+    ESP_LOGI(TAG, "Calibracion de la temperatura en %.1f grados", temperature_correction);
+
+    return temperature_correction;
+
+}
 
 
 void event_handler_sync (struct timeval *tv) {
@@ -168,9 +194,6 @@ void event_handler_sync (struct timeval *tv) {
 
 
 
-static const char *list_mode[] = {CONFIG_TEXT_STATUS_APP_ERROR, CONFIG_TEXT_STATUS_APP_AUTO, CONFIG_TEXT_STATUS_APP_MANUAL, 
-    CONFIG_TEXT_STATUS_APP_STARTING, CONFIG_TEXT_STATUS_APP_CONNECTING, CONFIG_TEXT_STATUS_APP_UPGRADING, CONFIG_TEXT_STATUS_APP_UNKNOWN};
-
 /* Event handler for catching RainMaker events */
 static void event_handler_wifi(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
 
@@ -178,6 +201,7 @@ static void event_handler_wifi(void* arg, esp_event_base_t event_base, int32_t e
     {
     case IP_EVENT_STA_GOT_IP:
     case IP_EVENT_ETH_GOT_IP:
+    case IP_EVENT_AP_STAIPASSIGNED:
         ESP_LOGE(TAG, "Se ha obtenido direccion ip y estamos conectados a internet. Event id: %d", event_id);
         notify_wifi_status(true);
         

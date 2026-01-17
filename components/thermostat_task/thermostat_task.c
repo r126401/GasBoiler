@@ -153,7 +153,7 @@ THERMOSTAT_ACTION thermostat_action(float current_temperature) {
 
 	ESP_LOGI(TAG, "Estamos en thermostat_action");
 
-   STATUS_GAS_BOILER status;
+   status_app_t status;
 
     status = get_status_gas_boiler();
 
@@ -266,8 +266,9 @@ esp_err_t reading_local_temperature(float *current_temperature) {
     esp_err_t error = ESP_FAIL;
 	float temperatura_a_redondear;
 	//float current_temperature;
-	float calibrate = -3.5;
+	float calibrate;
 
+    calibrate = get_temperature_correction();
     ESP_LOGI(TAG, "Leyendo desde el sensor. Calibrado: %.2f", calibrate);
 
 	error = read_temperature(current_temperature);

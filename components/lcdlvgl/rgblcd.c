@@ -22,7 +22,7 @@
 #include "driver/spi_master.h"
 
 #include  "esp_lcd_touch_xpt2046.h"
-#include "events_app.h"
+#include "app_interface.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
