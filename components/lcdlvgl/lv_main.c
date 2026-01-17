@@ -49,6 +49,7 @@ lv_obj_t *label_mode;
 
 lv_obj_t *icon_heating;
 lv_obj_t *label_text_mode;
+lv_obj_t *lv_name_device;
 
 lv_timer_t *timer_time;
 lv_timer_t *mytimer;
@@ -661,6 +662,15 @@ static void create_label_text_mode() {
 }
 
 
+static void lv_create_device_name() {
+    
+    lv_name_device = lv_label_create(screen_main_thermostat);
+    lv_obj_set_pos(lv_name_device,70,5);
+    //lv_obj_align_to(lv_name_device, button_main_reset, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
+    lv_label_set_text(lv_name_device, "Gas Boiler");
+}
+
+
 void create_screen() {
 
     mytimer = NULL;
@@ -678,6 +688,8 @@ void create_screen() {
 	create_heating_icon();
     lv_update_heating(false);
 	create_label_text_mode();
+    lv_create_device_name();
+    lv_update_device_name(CONFIG_ESP_RMAKER_NAME_DEVICE);
     lv_update_text_mode(CONFIG_TEXT_STATUS_APP_UNKNOWN);
     ESP_LOGI(TAG, "Creada la pantalla principal");
     
@@ -709,5 +721,11 @@ ESP_LOGI(TAG, "qrcode:%s", qrcode);
 lv_qrcode_update(qr, qrcode, strlen(qrcode));
 lv_obj_invalidate(qr);
 
+
+}
+
+void lv_update_device_name(char *device_name) {
+
+     lv_label_set_text(lv_name_device, device_name);
 
 }

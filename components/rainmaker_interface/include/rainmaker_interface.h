@@ -20,3 +20,4 @@ void platform_reset_device();
 void platform_factory_reset_device();
 esp_err_t platform_notify_setpoint_temperature(float setpoint_temperature);
 esp_err_t platform_notify_heating_gas_Boiler(bool action);
+char* platform_get_device_name();

@@ -212,6 +212,21 @@ esp_err_t platform_notify_heating_gas_Boiler(bool action) {
 
 }
 
+char* platform_get_device_name() {
+
+    char *name;
+    esp_rmaker_param_t *param;
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, ESP_RMAKER_DEF_NAME_PARAM);
+    if (param != NULL) {
+        name = esp_rmaker_param_get_val(param)->val.s;
+        return name;
+    } else {
+        ESP_LOGE(TAG, "No se ha podido extraer el nombre del dispositivo");
+        return NULL;
+    }
+
+}
+
 
 void event_handler_sync (struct timeval *tv) {
 
@@ -563,7 +578,7 @@ void rainmaker_interface_init_environment() {
         CONFIG_ESP_RMAKER_PARAM_HEATING_NAME,
         CONFIG_ESP_RMAKER_PARAM_HEATING,
         esp_rmaker_bool(false),
-        PROP_FLAG_READ | PROP_FLAG_WRITE);
+        PROP_FLAG_READ);
         esp_rmaker_param_add_ui_type(param, ESP_RMAKER_UI_TOGGLE);
         //esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
         esp_rmaker_device_add_param(gasBoiler_device, param);
