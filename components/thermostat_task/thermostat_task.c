@@ -1,6 +1,6 @@
 
 #include "thermostat_task.h"
-#include "rainmaker_interface.h"
+#include "app_interface.h"
 #include "events_lcd.h"
 #include "esp_err.h"
 #include "stdbool.h"
@@ -93,11 +93,36 @@ THERMOSTAT_MODE get_thermostat_mode() {
 }
 
 
-enum STATUS_RELAY relay_operation(STATUS_RELAY op) {
+enum STATUS_RELAY IRAM_ATTR relay_operation(STATUS_RELAY op) {
 
-    return gpio_get_level(CONFIG_SENSOR_THERMOSTAT_GPIO);
+	
+	if (gpio_get_level(CONFIG_RELAY_GPIO) == OFF){
+		if (op == ON) {
+			gpio_set_level(CONFIG_RELAY_GPIO, op);
+			ESP_LOGE(TAG, "Accion: OFF->ON");
+                notify_heating_gas_Boiler(op);
+		} else {
+			ESP_LOGE(TAG, "Accion: OFF->OFF");
+			}
+	} else {
+
+		if (op == ON) {
+			ESP_LOGE(TAG, "Accion: ON->ON");
+		} else {
+			gpio_set_level(CONFIG_RELAY_GPIO, op);
+			ESP_LOGE(TAG, "Accion: ON->OFF");
+            notify_heating_gas_Boiler(op);
+
+			}
+	}
+
+
+
+    //set_lcd_update_heating(op);
+
+
+	return gpio_get_level(CONFIG_RELAY_GPIO);
 }
-
 
 
 static enum THERMOSTAT_ACTION calcular_accion_termostato(STATUS_RELAY *accion, float current_temperature) {
@@ -303,7 +328,7 @@ void task_iotThermostat()
 	 * init driver ds18b20
 	 */
 
-	relay_operation(false);
+	relay_operation(OFF);
 	init_ds18b20();
     ESP_LOGI(TAG, "COMIENZA LA TAREA DE LECTURA DE TEMPERATURA");
     read_interval = get_read_interval();

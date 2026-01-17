@@ -15,5 +15,3 @@ void notify_mqtt_status(bool status);
 
 void time_refresh(void *arg);
 void update_time_valid(bool timevalid);
-void reset_device();
-void factory_reset_device();

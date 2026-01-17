@@ -3,6 +3,7 @@
 #include "app_interface.h"
 #include "rainmaker_interface.h"
 
+
 #include "thermostat_task.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -112,7 +113,7 @@ char* status2mnemonic(status_app_t status) {
 }
 
 
-status_app_t get_app_status() {
+status_app_t get_status() {
 
     return STATUS_APP_ERROR;
 }
@@ -120,3 +121,118 @@ status_app_t get_app_status() {
 
 
 
+void notify_current_temperature(float current_temperature) {
+
+    
+    platform_notify_current_temperature(current_temperature);
+    set_lcd_update_temperature(current_temperature);
+    ESP_LOGI(TAG, "Enviada la temperatura al display");
+
+}
+
+float get_setpoint_temperature() {
+
+    float current_setpoint_temperature;
+    current_setpoint_temperature = platform_get_setpoint_temperature();
+    ESP_LOGI(TAG, "Setpoint_temperature: %.1f", current_setpoint_temperature);
+    return current_setpoint_temperature;
+
+}
+
+
+
+void notify_sensor_fail() {
+    
+    platform_notify_sensor_fail();
+    set_lcd_update_icon_errors(true);
+
+}
+
+
+int get_read_interval() {
+
+    int read_interval;
+    read_interval = platform_get_read_interval();
+    ESP_LOGI(TAG, "Intervalo de lectura: %d segundos", read_interval);
+    return read_interval;
+}
+
+
+status_app_t get_status_gas_boiler() {
+
+    status_app_t status;
+    status = platform_get_status_gas_boiler();
+    ESP_LOGI(TAG, "El estado de la aplicacion es %d", status);
+
+    return status;
+
+}
+float get_current_temperature() {
+
+    float temperature;
+    temperature = platform_get_current_temperature();
+    ESP_LOGI(TAG, "Temperatura enviada por la cloud: %.1f", temperature);
+
+    return temperature;
+
+}
+float get_temperature_correction() {
+    
+    float temperature_correction;
+
+    temperature_correction = platform_get_temperature_correction();
+    ESP_LOGI(TAG, "Calibracion de la temperatura en %.1f grados", temperature_correction);
+    return temperature_correction;
+
+
+}
+
+void reset_device() {
+
+    platform_reset_device();
+}
+
+void factory_reset_device() {
+
+    platform_factory_reset_device();
+}
+
+void notify_setpoint_temperature(float setpoint_temperature) {
+
+    esp_err_t error;
+    float current_temperature;
+    THERMOSTAT_ACTION action;
+
+    error = platform_notify_setpoint_temperature(setpoint_temperature);
+    if (error == ESP_OK) {
+
+        ESP_LOGI(TAG, "Setpoint temperature de %.1f enviado a la cloud", setpoint_temperature);
+    } else {
+
+                ESP_LOGE(TAG, "No se ha podido enviar el setpoint temperature a la cloud");
+    }
+
+    current_temperature = get_current_temperature();
+    thermostat_action(current_temperature);
+
+}
+
+void notify_heating_gas_Boiler(bool action) {
+
+    esp_err_t error;
+
+
+
+
+    error = platform_notify_heating_gas_Boiler(action);
+    if (error == ESP_OK) {
+        ESP_LOGI(TAG, "Gas Boiler accionado a valor %d", action);
+    } else {
+        ESP_LOGE(TAG, "No se ha podido reportar el estado a la cloud");
+    }
+    
+    set_lcd_update_heating(action);
+
+
+
+}

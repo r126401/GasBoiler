@@ -60,6 +60,19 @@ menu "GAS BOILER PARAMETERS OF DEVICE"
             default "temperature correction"
             help 
                 Is the temperature correction of thermostat to hw
+        
+        config ESP_RMAKER_PARAM_HEATING
+            string  "Set heating type"
+            default "esp.param.heating"
+            help 
+                Is the type of param temperature correction to work thermostat
+
+        config ESP_RMAKER_PARAM_HEATING_NAME
+            string  "Set heating name param"
+            default "heating"
+            help 
+                Is the heating indicator
+
 
         config ESP_RMAKER_PARAM_ALARM
             string  "Set Alarm type"

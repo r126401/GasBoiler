@@ -51,13 +51,13 @@ esp_rmaker_device_t *gasBoiler_device;
 
 float current_setpoint_temperature = -100;
 
-void notify_current_temperature(float current_temperature) {
+void platform_notify_current_temperature(float current_temperature) {
 
 
     esp_rmaker_param_t *param;
 
-    set_lcd_update_temperature(current_temperature);
-    ESP_LOGI(TAG, "Enviada la temperatura al display");
+    //set_lcd_update_temperature(current_temperature);
+    
     param = esp_rmaker_device_get_param_by_name(gasBoiler_device, ESP_RMAKER_DEF_TEMPERATURE_NAME);
     if (param != NULL) {
         esp_rmaker_param_update_and_report(param, esp_rmaker_float(current_temperature));
@@ -67,41 +67,9 @@ void notify_current_temperature(float current_temperature) {
 
 }
 
-void notify_sensor_fail() {
-
-    esp_rmaker_param_t *param;
-    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_PARAM_ALARM_NAME);
-    if (param != NULL) {
-        ESP_LOGW(TAG, "Alarma de sensor en fallo. Se envia el fallo a la cloud");
-        esp_rmaker_param_update_and_notify(param, esp_rmaker_str(CONFIG_ESP_RMAKER_PARAM_ALARM_SENSOR_FAIL));
-    } else {
-        ESP_LOGE(TAG, "No se ha podido enviar el fallo a la cloud");
-    }
-    set_lcd_update_icon_errors(true);
-   
-}
-
-float get_current_temperature() {
-
-    esp_rmaker_param_t *param;
-    float temperature;
-
-    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, ESP_RMAKER_DEF_TEMPERATURE_NAME);
-    if (param != NULL) {
-
-        temperature = esp_rmaker_param_get_val(param)->val.f;
-    } else {
-        temperature = INVALID_TEMPERATURE;
-    }
-
-    ESP_LOGI(TAG, "Temperatura enviada por la cloud: %.1f", temperature);
-
-    return temperature;
-		
-}
 
 
-float get_setpoint_temperature() {
+float platform_get_setpoint_temperature() {
 
     esp_rmaker_param_t *param;
 
@@ -115,12 +83,27 @@ float get_setpoint_temperature() {
         }
     }
 
-    ESP_LOGI(TAG, "Setpoint_temperature: %.1f", current_setpoint_temperature);
+    //ESP_LOGI(TAG, "Setpoint_temperature: %.1f", current_setpoint_temperature);
     
     return current_setpoint_temperature;
 }
 
-int get_read_interval() {
+void platform_notify_sensor_fail() {
+
+    esp_rmaker_param_t *param;
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_PARAM_ALARM_NAME);
+    if (param != NULL) {
+        ESP_LOGW(TAG, "Alarma de sensor en fallo. Se envia el fallo a la cloud");
+        esp_rmaker_param_update_and_report(param, esp_rmaker_str(CONFIG_ESP_RMAKER_PARAM_ALARM_SENSOR_FAIL));
+    } else {
+        ESP_LOGE(TAG, "No se ha podido enviar el fallo a la cloud");
+    }
+    //set_lcd_update_icon_errors(true);
+   
+}
+
+
+int platform_get_read_interval() {
 
     esp_rmaker_param_t *param;
     int read_interval;
@@ -131,19 +114,40 @@ int get_read_interval() {
         read_interval = DEFAULT_READ_INTERVAL;
     }
 
-    ESP_LOGI(TAG, "Intervalo de lectura: %d segundos", read_interval);
+    //ESP_LOGI(TAG, "Intervalo de lectura: %d segundos", read_interval);
     return read_interval;
 
 
 }
 
 
-status_app_t get_status_gas_boiler() {
+
+float platform_get_current_temperature() {
+
+    esp_rmaker_param_t *param;
+    float temperature;
+
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, ESP_RMAKER_DEF_TEMPERATURE_NAME);
+    if (param != NULL) {
+
+        temperature = esp_rmaker_param_get_val(param)->val.f;
+    } else {
+        temperature = INVALID_TEMPERATURE;
+    }
+
+    //ESP_LOGI(TAG, "Temperatura enviada por la cloud: %.1f", temperature);
+
+    return temperature;
+		
+}
+
+
+status_app_t platform_get_status_gas_boiler() {
 
     return STATUS_APP_AUTO;
 }
 
-float get_temperature_correction() {
+float platform_get_temperature_correction() {
 
     float temperature_correction = DEFAULT_TEMPERATURE_CORRECTION;
     
@@ -159,6 +163,52 @@ float get_temperature_correction() {
     ESP_LOGI(TAG, "Calibracion de la temperatura en %.1f grados", temperature_correction);
 
     return temperature_correction;
+
+}
+
+void platform_reset_device() {
+
+    esp_rmaker_reboot(2);
+
+}
+
+
+void platform_factory_reset_device() {
+
+    esp_rmaker_factory_reset(2,2);
+}
+
+esp_err_t platform_notify_setpoint_temperature(float setpoint_temperature) {
+
+    esp_rmaker_param_t *param;
+
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_TYPE_PARAM_SETPOINT_TEMPERATURE_NAME);
+    if (param != NULL) {
+        esp_rmaker_param_update_and_report(param, esp_rmaker_float(setpoint_temperature));
+        return ESP_OK;
+    } else {
+
+        return ESP_FAIL;
+    }
+    
+
+}
+
+
+esp_err_t platform_notify_heating_gas_Boiler(bool action) {
+
+    esp_rmaker_param_t *param;
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_PARAM_HEATING_NAME);
+    if (param != NULL) {
+        esp_rmaker_param_update_and_report(param, esp_rmaker_bool(action));
+        //esp_rmaker_param_update_and_report(param, "estadisticas", esp_rmaker_bool(action);
+        return ESP_OK;
+    } else {
+        ESP_LOGE(TAG, "El valor del parametro no se ha podido leer");
+        return ESP_FAIL;
+    }
+
+
 
 }
 
@@ -507,7 +557,17 @@ void rainmaker_interface_init_environment() {
         esp_rmaker_device_add_param(gasBoiler_device, param);
         
         //esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
-        
+    
+    /* heating*/
+    param = esp_rmaker_param_create(
+        CONFIG_ESP_RMAKER_PARAM_HEATING_NAME,
+        CONFIG_ESP_RMAKER_PARAM_HEATING,
+        esp_rmaker_bool(false),
+        PROP_FLAG_READ | PROP_FLAG_WRITE);
+        esp_rmaker_param_add_ui_type(param, ESP_RMAKER_UI_TOGGLE);
+        //esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
+        esp_rmaker_device_add_param(gasBoiler_device, param);
+
 
    
     /* Setpoint AC MODE*/

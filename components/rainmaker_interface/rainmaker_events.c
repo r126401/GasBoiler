@@ -173,14 +173,3 @@ void update_time_valid(bool timevalid) {
 
 }
 
-void reset_device() {
-
-    esp_rmaker_reboot(2);
-
-}
-
-
-void factory_reset_device() {
-
-    esp_rmaker_factory_reset(2,2);
-}

@@ -17,8 +17,7 @@
 #include "styles.h"
 #include "time.h"
 #include "esp_log.h"
-#include "rainmaker_events.h"
-#include "rainmaker_interface.h"
+#include "app_interface.h"
 
 
 static char *TAG = "lv_main.c";
@@ -432,8 +431,7 @@ void timer_cb(lv_timer_t *timer) {
     //ESP_LOGI(TAG, "THRESHOLD VALE, %.1f", *threshold);
 
     //send_event_app_threshold(*threshold);
-
-
+    notify_setpoint_temperature(*threshold);
     lv_obj_set_style_text_color(text_threshold, lv_color_hex(LV_COLOR_TEXT_NOTIFICATION), LV_PART_MAIN);
     pulse = false;
 
@@ -467,10 +465,7 @@ static void lv_event_handler_button_up(lv_event_t *event) {
 
     mytimer = lv_timer_create(timer_cb, 3000, &threshold);
     lv_timer_set_repeat_count(mytimer, 1);
-
-
-
-
+    
     lv_update_threshold_temperature(threshold);
 
 
@@ -681,6 +676,7 @@ void create_screen() {
     lv_update_threshold_temperature(get_setpoint_temperature());
 	create_layout_buttons_threshold();
 	create_heating_icon();
+    lv_update_heating(false);
 	create_label_text_mode();
     lv_update_text_mode(CONFIG_TEXT_STATUS_APP_UNKNOWN);
     ESP_LOGI(TAG, "Creada la pantalla principal");

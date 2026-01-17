@@ -81,10 +81,15 @@ typedef enum status_app_t {
 
 
 void init_app_environment();
-float get_app_setpoint_temperature();
-void notify_app_current_temperature(float current_temperature);
-void notify_app_sensor_fail();
-int get_app_read_interval();
-status_app_t get_app_status_gas_boiler();
-float get_app_current_temperature();
-float get_app_temperature_correction();
+float get_setpoint_temperature();
+void notify_current_temperature(float current_temperature);
+void notify_sensor_fail();
+int get_read_interval();
+status_app_t get_status_gas_boiler();
+float get_current_temperature();
+float get_temperature_correction();
+void reset_device();
+void factory_reset_device();
+void notify_setpoint_temperature(float setpoint_temperature);
+void notify_heating_gas_Boiler(bool action) ;
+

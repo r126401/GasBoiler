@@ -4,7 +4,7 @@
 #define READ_INTERVAL 60;
 
 
-void create_task_thermostat();
+
 
 typedef enum STATUS_RELAY {
     INDETERMINADO = -1,
@@ -33,5 +33,6 @@ typedef enum THERMOSTAT_MODE {
 
 } THERMOSTAT_MODE;
 
-
+void create_task_thermostat();
+THERMOSTAT_ACTION thermostat_action(float current_temperature);
 
