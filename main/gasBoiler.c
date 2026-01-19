@@ -21,7 +21,8 @@ void app_main(void)
     init_lcdrgb();
     create_task_thermostat();
     init_app_environment();
-    //rainmaker_interface_init_environment();
+    set_status_app(STATUS_APP_STARTING);
+
 
     
 

@@ -175,7 +175,9 @@ void platform_reset_device() {
 
 void platform_factory_reset_device() {
 
-    esp_rmaker_factory_reset(2,2);
+    
+    esp_rmaker_wifi_reset(0,0);
+    esp_rmaker_factory_reset(0,0);
 }
 
 esp_err_t platform_notify_setpoint_temperature(float setpoint_temperature) {
@@ -304,6 +306,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                 break;
             case RMAKER_EVENT_CLAIM_STARTED:
                 ESP_LOGI(TAG, "event_handler_RainMaker Claim Started.");
+                set_status_app(STATUS_APP_CONNECTING);
                 break;
             case RMAKER_EVENT_CLAIM_SUCCESSFUL:
                 ESP_LOGI(TAG, "event_handler_RainMaker Claim Successful.");
@@ -353,9 +356,8 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                     text_qrcode = (char*) calloc(strlen(event_data) + 1, sizeof(char));
                 }
                 strncpy(text_qrcode, event_data, strlen(event_data));
-
-                provisioning_device(text_qrcode);
-
+                print_qr_register(text_qrcode);
+                //falta liberar la memoria te text_qrcode cuando se acabe de provisionar
                 break;
             case APP_NETWORK_EVENT_PROV_TIMEOUT:
                 ESP_LOGI(TAG, "event_handler_Provisioning Timed Out. Please reboot.");
@@ -514,6 +516,7 @@ void rainmaker_interface_init_environment() {
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler_wifi, NULL));
 
 
+
     /* Initialize the ESP RainMaker Agent.
      * Note that this should be called after app_network_init() but before app_network_start()
      * */
@@ -542,9 +545,9 @@ void rainmaker_interface_init_environment() {
 
     /* power*/
 
-    param = esp_rmaker_power_param_create(ESP_RMAKER_DEF_POWER_NAME, false);
+   // param = esp_rmaker_power_param_create(ESP_RMAKER_DEF_POWER_NAME, false);
     //assign_primary_param(param);
-    esp_rmaker_device_add_param(gasBoiler_device, param);
+    //esp_rmaker_device_add_param(gasBoiler_device, param);
     //esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
 
 
@@ -552,7 +555,7 @@ void rainmaker_interface_init_environment() {
     /* temperature*/
     param = esp_rmaker_param_create(
         ESP_RMAKER_DEF_TEMPERATURE_NAME, 
-        ESP_RMAKER_DEVICE_THERMOSTAT, 
+        ESP_RMAKER_PARAM_TEMPERATURE, 
         esp_rmaker_float(22.5),
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
         //assign_primary_param(param);
@@ -566,9 +569,8 @@ void rainmaker_interface_init_environment() {
         CONFIG_ESP_RMAKER_TYPE_PARAM_SETPOINT_TEMPERATURE, 
         esp_rmaker_float(CONFIG_ESP_RMAKER_DEFAULT_SETPOINT_TEMPERATURE),
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
-        //esp_rmaker_param_add_ui_type(param, ESP_RMAKER_UI_SLIDER);
-        //esp_rmaker_param_add_bounds(param, esp_rmaker_float(0.0f), esp_rmaker_float(50.0f), esp_rmaker_float(0.5f));
-
+        esp_rmaker_param_add_ui_type(param, ESP_RMAKER_UI_SLIDER);
+        esp_rmaker_param_add_bounds(param, esp_rmaker_float(0.0f), esp_rmaker_float(50.0f), esp_rmaker_float(0.5f));
         esp_rmaker_device_add_param(gasBoiler_device, param);
         
         //esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
@@ -590,7 +592,7 @@ void rainmaker_interface_init_environment() {
         CONFIG_ESP_RMAKER_TYPE_PARAM_MODE_NAME, 
         ESP_RMAKER_PARAM_AC_MODE, 
         esp_rmaker_str(CONFIG_TEXT_STATUS_APP_STARTING),
-        PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
+        PROP_FLAG_READ);
         esp_rmaker_param_add_valid_str_list(param, list_mode, 7);
         esp_rmaker_device_add_param(gasBoiler_device, param);
 
@@ -600,6 +602,8 @@ void rainmaker_interface_init_environment() {
         CONFIG_ESP_RMAKER_PARAM_TEMPERATURE_CORRECTION, 
         esp_rmaker_float(DEFAULT_TEMPERATURE_CORRECTION),
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
+        esp_rmaker_param_add_ui_type(gasBoiler_device, ESP_RMAKER_UI_SLIDER);
+        esp_rmaker_param_add_bounds(param, esp_rmaker_float(0.0), esp_rmaker_float(30.0), esp_rmaker_float(0.5));
         esp_rmaker_device_add_param(gasBoiler_device, param);
 
 
@@ -619,6 +623,8 @@ void rainmaker_interface_init_environment() {
         CONFIG_ESP_RMAKER_PARAM_READ_INTERVAL,
         esp_rmaker_int(DEFAULT_READ_INTERVAL),
         PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
+        esp_rmaker_param_add_ui_type(param, ESP_RMAKER_UI_SLIDER);
+        esp_rmaker_param_add_bounds(param, esp_rmaker_int(10), esp_rmaker_int(120), esp_rmaker_int(5));
         esp_rmaker_device_add_param(gasBoiler_device, param);
 
 
@@ -628,8 +634,9 @@ void rainmaker_interface_init_environment() {
      .reboot_seconds = 2,
      .reset_seconds = 2,
      .reset_reboot_seconds = 2
-};
+    };
 
+    esp_rmaker_system_service_enable(&system_serv_config);
 
     /* Add the write callback for the device. We aren't registering any read callback yet as
      * it is for future use.

@@ -96,10 +96,16 @@ char* event_lcd_2_mnemonic(EVENT_TYPE_LCD type_lcd) {
         
         break;
 
+        case QR_REGISTER:
+
+        strncpy(mnemonic, "QR_REGISTER", 30);
+        break;
+
         case QR_CONFIRMED:
 
         strncpy(mnemonic, "QR_CONFIRMED", 30);
         break;
+
 
         case UPGRADE_FIRMWARE:
         strncpy(mnemonic, "UPGRADE_FIRMWARE", 30);
@@ -197,13 +203,17 @@ static void receive_lcd_event(event_lcd_t event) {
         case UPDATE_PERCENT:
 
         //lv_update_percent(event.par1);
-        lv_paint_qr_code(event.text);
+        //lv_paint_qr_code(event.text);
         
         break;
 
-        case QR_CONFIRMED:
+        case QR_REGISTER:
 
-        //lv_qrcode_confirmed();
+        lv_paint_qr_code(event.text);
+        break;
+
+        case QR_CONFIRMED:
+        lv_update_hide_qr_code(true);
         break;
 
         case UPGRADE_FIRMWARE:
@@ -375,11 +385,7 @@ void set_lcd_update_percent(float percent) {
     update_lcd_int(UPDATE_PERCENT, percent, -1, -1, true);
 
 }
-void set_lcd_update_qr_confirmed() {
 
-    update_lcd_bool(QR_CONFIRMED, true);
-
-}
 
 
 void set_lcd_update_icon_errors(bool status) {
@@ -408,7 +414,12 @@ void set_lcd_update_button_instalation(bool show) {
     update_lcd_bool(UPDATE_BUTTON_INSTALATION, show);
 }
 
-void set_lcd_qr_confirmed(char *register_data) {
+void set_lcd_qr_register(char *register_data) {
 
-    update_lcd_char(QR_CONFIRMED, register_data);
+    update_lcd_char(QR_REGISTER, register_data);
+}
+
+void set_lcd_hide_qr_register() {
+
+    update_lcd_bool(QR_CONFIRMED, true);
 }

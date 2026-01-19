@@ -70,7 +70,8 @@ typedef enum status_app_t {
    STATUS_APP_STARTING,
    STATUS_APP_CONNECTING,
    STATUS_APP_SYNCING,
-   STATUS_APP_UPGRADING
+   STATUS_APP_UPGRADING,
+   STATUS_APP_UNDEFINED
 
 } status_app_t;
 
@@ -92,4 +93,6 @@ void reset_device();
 void factory_reset_device();
 void notify_setpoint_temperature(float setpoint_temperature);
 void notify_heating_gas_Boiler(bool action) ;
+void print_qr_register(char* register_data);
+void set_status_app(status_app_t status);
 

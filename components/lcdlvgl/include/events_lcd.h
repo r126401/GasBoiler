@@ -18,6 +18,7 @@ typedef enum EVENT_TYPE_LCD {
     UPDATE_ICON_ERRORS,
     UPDATE_TEXT_SCHEDULE,
     UPDATE_PERCENT,
+    QR_REGISTER,
     QR_CONFIRMED,
     UPGRADE_FIRMWARE,
     ERROR_FACTORY,
@@ -58,8 +59,10 @@ void set_lcd_update_text_schedule(int par1, int par2, int par3);
 void set_lcd_update_percent(float percent);
 void set_lcd_update_icon_errors(bool status);
 void set_lcd_update_qr_confirmed();
+void set_lcd_hide_qr_register();
 void set_lcd_update_upgrade_firmware(char* message, int cursor);
 void set_lcd_update_error_factory();
 void set_lcd_update_button_instalation(bool show);
+void set_lcd_qr_register(char *register_data);
 
 

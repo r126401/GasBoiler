@@ -22,6 +22,7 @@ xQueueHandle event_queue_app;
 static const char *TAG = "events_app";
 extern float current_threshold;
 extern EventGroupHandle_t evt_between_task;
+status_app_t current_status;
 
 
 
@@ -236,4 +237,61 @@ void notify_heating_gas_Boiler(bool action) {
 
 
 }
+
+void print_qr_register(char* register_data) {
+
+    set_lcd_qr_register(register_data);
+    set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_FACTORY);
+    set_lcd_update_bluetooth(true);
+}
+
+
+static void set_status_starting() {
+
+    set_lcd_update_text_mode(TEXT_STATUS_APP_STARTING);
+    set_lcd_update_heating(false);
+    set_lcd_update_bluetooth(false);
+    set_lcd_update_broker_status(false);
+    set_lcd_update_wifi_status(false);
+}
+
+
+static void set_status_factory() {
+
+    set_lcd_update_text_mode(TEXT_STATUS_APP_FACTORY);
+    set_lcd_update_bluetooth(true);
+}
+
+static void set_status_connecting() {
+
+    set_lcd_update_qr_confirmed(false);
+    set_lcd_update_text_mode(TEXT_STATUS_APP_CONNECTING);
+    
+}
+
+void set_status_app(status_app_t status) {
+
+    if ((status == STATUS_APP_UNDEFINED) || (status == STATUS_APP_STARTING)) {
+        current_status = status;
+        set_status_starting();
+        return;
+        
+    }
+
+    if (status == STATUS_APP_FACTORY) {
+        current_status = status;
+        return;
+    }
+
+    if (status == STATUS_APP_CONNECTING) {
+        if (current_status == STATUS_APP_FACTORY) {
+            //Hemos acabado el registro y vamos a conectarnos.
+            set_lcd_update_qr_confirmed();
+        }
+    }
+
+
+}
+
+
 

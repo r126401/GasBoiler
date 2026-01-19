@@ -29,6 +29,7 @@ lv_obj_t *date_text;
 lv_obj_t *icon_wifi;
 lv_obj_t *icon_broker;
 lv_obj_t *icon_bluetooth;
+lv_obj_t *qr_code;
 
 lv_obj_t *button_main_reset;
 lv_obj_t *label_main_reset;
@@ -696,7 +697,7 @@ void create_screen() {
 }
 
 
-void lv_paint_qr_code(char *qrcode) {
+void lv_paint_qr_code(char *qrcode_text) {
 
     // Tamaño del código QR y color
 uint16_t qr_size = 80; // Tamaño en píxeles
@@ -704,22 +705,25 @@ uint16_t qr_size = 80; // Tamaño en píxeles
 //lv_color_t qr_bg_color = lv_color_black(); // Color de fondo del QR
 
 // Crear el objeto QR code
-lv_obj_t *qr = lv_qrcode_create(screen_main_thermostat);
+if (qr_code == NULL) {
+    qr_code = lv_qrcode_create(screen_main_thermostat);
+}
 
 
 
-lv_qrcode_set_size(qr, qr_size);
-lv_obj_set_pos(qr, 5,160);
+
+lv_qrcode_set_size(qr_code, qr_size);
+lv_obj_set_pos(qr_code, 5,160);
 
 
 // Posición en pantalla (opcional)
 //lv_obj_align(qr, LV_ALIGN_CENTER, 0, 0);
 
-ESP_LOGI(TAG, "qrcode:%s", qrcode);
+ESP_LOGI(TAG, "qrcode:%s", qrcode_text);
 
 // Actualizar el QR code con el contenido
-lv_qrcode_update(qr, qrcode, strlen(qrcode));
-lv_obj_invalidate(qr);
+lv_qrcode_update(qr_code, qrcode_text, strlen(qrcode_text));
+lv_obj_invalidate(qr_code);
 
 
 }
@@ -728,4 +732,13 @@ void lv_update_device_name(char *device_name) {
 
      lv_label_set_text(lv_name_device, device_name);
 
+}
+
+void lv_update_hide_qr_code(bool action) {
+
+    if (action) {
+        lv_obj_add_flag(qr_code, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_remove_flag(qr_code, LV_OBJ_FLAG_HIDDEN);
+    }
 }

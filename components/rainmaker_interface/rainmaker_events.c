@@ -30,6 +30,7 @@ void  provisioning_device(char *register_data) {
 
     
     //lv_paint_qr_code(register_data);
+    set_lcd_qr_register(register_data);
     set_lcd_update_qr_confirmed(register_data);
     set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_FACTORY);
     set_lcd_update_bluetooth(true);
@@ -42,8 +43,10 @@ void  provisioning_device(char *register_data) {
 void notify_wifi_status(bool status) {
 
     ESP_LOGI(TAG, "Status wifi: %d", status);
-    //lv_update_show_wifi(status);
     set_lcd_update_wifi_status(status);
+    if (status == false) {
+        set_lcd_update_broker_status(false);
+    }
 
 
 }
@@ -51,7 +54,6 @@ void notify_wifi_status(bool status) {
 void notify_mqtt_status(bool status) {
 
     ESP_LOGI(TAG, "Status mqtt: %d", status);
-    //lv_update_show_broker(true);
     set_lcd_update_broker_status(true);
 
 }
