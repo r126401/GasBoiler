@@ -103,3 +103,4 @@ void notify_wifi_status(bool status);
 void notify_mqtt_status(bool status);
 void time_refresh(void *arg);
 void update_time_valid(bool timevalid);
+bool get_now(uint32_t *hour, uint32_t *min, uint32_t *sec);

@@ -2,6 +2,7 @@
 
 #include "app_interface.h"
 #include "rainmaker_interface.h"
+#include "rainmaker_schedule.h"
 
 
 #include "thermostat_task.h"
@@ -67,7 +68,7 @@ void notify_device_started() {
 }
 
 
-static bool get_now(uint32_t *hour, uint32_t *min, uint32_t *sec) {
+bool get_now(uint32_t *hour, uint32_t *min, uint32_t *sec) {
 
     time_t now;
 	struct tm fecha;
