@@ -34,7 +34,6 @@
 #include "cJSON.h"
 #include "esp_rmaker_internal.h"
 #include "lv_main.h"
-#include "rainmaker_events.h"
 #include "events_lcd.h"
 
 static const char *TAG = "rainmaker_interface.c";
@@ -248,6 +247,7 @@ void event_handler_sync (struct timeval *tv) {
     case SNTP_SYNC_STATUS_COMPLETED:
         ESP_LOGI(TAG, "La sincronizacion esta completada");
         update_time_valid(true);
+
         break;
 
 
@@ -303,19 +303,21 @@ static void event_handler_wifi(void* arg, esp_event_base_t event_base, int32_t e
     {
     case IP_EVENT_STA_GOT_IP:
     case IP_EVENT_ETH_GOT_IP:
-    case IP_EVENT_AP_STAIPASSIGNED:
         ESP_LOGE(TAG, "Se ha obtenido direccion ip y estamos conectados a internet. Event id: %d", event_id);
-        notify_wifi_status(true);
+        set_status_app(STATUS_APP_CONNECTED);
         
         break;
     
     case IP_EVENT_STA_LOST_IP:
     case IP_EVENT_ETH_LOST_IP:
-    case WIFI_EVENT_STA_BEACON_TIMEOUT:
         ESP_LOGE(TAG, "Se ha perdido la señal wifi. Event id: %d", event_id);
         notify_wifi_status(false);
         notify_mqtt_status(false);
 
+        break;
+    case 43:
+        ESP_LOGE(TAG, "Status 43 recibido que aun no sabemos lo que es");
+        set_status_app(STATUS_APP_CONNECTING);
         break;
     
     default:
@@ -383,7 +385,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                 break;
             case RMAKER_MQTT_EVENT_PUBLISHED:
                 ESP_LOGI(TAG, "event_handler_MQTT Published. Msg id: %d.", *((int *)event_data));
-                get_schedules_list();
+                //get_schedules_list();
                 break;
             default:
                 ESP_LOGW(TAG, "event_handler_Unhandled RainMaker Common Event: %"PRIi32, event_id);
@@ -396,7 +398,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                     text_qrcode = (char*) calloc(strlen(event_data) + 1, sizeof(char));
                 }
                 strncpy(text_qrcode, event_data, strlen(event_data));
-                print_qr_register(text_qrcode);
+                notify_status_factory(text_qrcode);
                 //falta liberar la memoria te text_qrcode cuando se acabe de provisionar
                 break;
             case APP_NETWORK_EVENT_PROV_TIMEOUT:
@@ -739,10 +741,13 @@ sntp_set_time_sync_notification_cb(event_handler_sync);
 
 }
 
-void get_schedules_list() {
+uint8_t get_schedules_list() {
 
     cJSON *json;
     cJSON *schedules;
+    cJSON *schedule;
+    cJSON *triggers = NULL;
+    uint8_t n_triggers = 0;
 
 
 
@@ -756,20 +761,29 @@ void get_schedules_list() {
             free(params_list);
             //Localizamos los schedules
 
-            schedules = cJSON_GetObjectItem(json, "Schedule");
-            if (schedules == NULL) {
+            schedule = cJSON_GetObjectItem(json, "Schedule");
+            if (schedule == NULL) {
                 ESP_LOGW(TAG, "No se han localizado schedules");
             } else {
-                ESP_LOGI(TAG, "Los schedules son : %s", cJSON_Print(schedules));
-                cJSON_Delete(schedules);
-                ESP_LOGI(TAG, "Borrado el json");
+                schedules = cJSON_GetObjectItem(schedule, "schedules");
+                if (schedules != NULL) {
+                    n_triggers = cJSON_GetArraySize(schedules);
+                    ESP_LOGI(TAG, "Son %ld schedules, y son : %s", n_triggers , cJSON_Print(schedules));
+                    cJSON_Delete(json);
+                    ESP_LOGI(TAG, "Borrado el json");
+                } else {
+                    ESP_LOGE(TAG, "Habia etiqueta schedule pero no schedules");
+                }
 
+                
             }
 
         } else {
-            ESP_LOGE(TAG, "Error al intentar leer los schedules");
+            ESP_LOGE(TAG, "Error al intentar leer los schedule");
         }
     }
+
+    return n_triggers;
 
     
    

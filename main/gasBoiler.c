@@ -19,9 +19,10 @@ void app_main(void)
 
     evt_between_task = xEventGroupCreate();
     init_lcdrgb();
+    set_status_app(STATUS_APP_STARTING);
     create_task_thermostat();
     init_app_environment();
-    set_status_app(STATUS_APP_STARTING);
+    
 
 
     

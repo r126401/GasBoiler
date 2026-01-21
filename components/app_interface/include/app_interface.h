@@ -69,7 +69,9 @@ typedef enum status_app_t {
    STATUS_APP_MANUAL,
    STATUS_APP_STARTING,
    STATUS_APP_CONNECTING,
+   STATUS_APP_CONNECTED,
    STATUS_APP_SYNCING,
+   STATUS_APP_SYNCRONIZED,
    STATUS_APP_UPGRADING,
    STATUS_APP_UNDEFINED
 
@@ -93,6 +95,11 @@ void reset_device();
 void factory_reset_device();
 void notify_setpoint_temperature(float setpoint_temperature);
 void notify_heating_gas_Boiler(bool action) ;
+void notify_status_factory(char* data_register);
 void print_qr_register(char* register_data);
 void set_status_app(status_app_t status);
-
+void notify_device_started();
+void notify_wifi_status(bool status);
+void notify_mqtt_status(bool status);
+void time_refresh(void *arg);
+void update_time_valid(bool timevalid);

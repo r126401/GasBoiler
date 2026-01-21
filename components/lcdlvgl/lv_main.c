@@ -691,7 +691,7 @@ void create_screen() {
 	create_label_text_mode();
     lv_create_device_name();
     lv_update_device_name(CONFIG_ESP_RMAKER_NAME_DEVICE);
-    lv_update_text_mode(CONFIG_TEXT_STATUS_APP_UNKNOWN);
+    lv_update_text_mode(" ");
     ESP_LOGI(TAG, "Creada la pantalla principal");
     
 }

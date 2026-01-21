@@ -11,11 +11,19 @@
 #include "esp_log.h"
 #include "esp_err.h"
 #include "events_lcd.h"
+#include "esp_timer.h"
+#include "esp_sntp.h"
 
 #include <string.h>
 #include "strings.h"
 #include <stdio.h>
 
+static esp_timer_handle_t timer_date_text;
+const esp_timer_create_args_t text_date_shot_timer_args = {
+    .callback = &time_refresh,
+    /* name is optional, but may help identify the timer when debugging */
+    .name = "time refresh date text"
+};
 
 
 xQueueHandle event_queue_app;
@@ -23,6 +31,149 @@ static const char *TAG = "events_app";
 extern float current_threshold;
 extern EventGroupHandle_t evt_between_task;
 status_app_t current_status;
+
+
+
+
+void notify_wifi_status(bool status) {
+
+    ESP_LOGI(TAG, "Status wifi: %d", status);
+    set_lcd_update_wifi_status(status);
+    if (status == false) {
+        set_lcd_update_broker_status(false);
+    }
+
+
+}
+
+void notify_mqtt_status(bool status) {
+
+    ESP_LOGI(TAG, "Status mqtt: %d", status);
+    set_lcd_update_broker_status(status);
+
+}
+
+
+
+
+void notify_device_started() {
+
+    ESP_LOGI(TAG, "device initied");
+    //lv_update_text_mode(CONFIG_TEXT_STATUS_APP_STARTING);
+    set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_STARTING);
+
+
+
+}
+
+
+static bool get_now(uint32_t *hour, uint32_t *min, uint32_t *sec) {
+
+    time_t now;
+	struct tm fecha;
+    time(&now);
+    localtime_r(&now, &fecha);
+
+    *hour = fecha.tm_hour;
+    *min = fecha.tm_min;
+    *sec = fecha.tm_sec;
+
+    return true;
+
+
+}
+
+
+void time_refresh(void *arg) {
+
+    uint32_t hour;
+    uint32_t min;
+    uint32_t sec;
+    uint32_t interval;
+
+  
+    
+    
+    if (esp_sntp_get_sync_status() == SNTP_SYNC_STATUS_IN_PROGRESS) {
+
+
+        //lv_update_time(-1,-1);
+        set_lcd_update_time(-1, -1, 0);
+        ESP_LOGI(TAG, "Hora invalida");
+        interval = 60;
+    } else {
+        get_now(&hour, &min, &sec);
+        //lv_update_time(hour, min);
+        set_lcd_update_time(hour, min, 0);
+        interval = 60 - sec;
+
+        
+        ESP_LOGI(TAG, "Actualizada la hora: %02d:%02d. proximo intervalo: %d", (int) hour, (int) min, (int) interval);
+       /* if (get_app_status() == STATUS_APP_AUTO) {
+            lv_update_lcd_schedule(true);
+        }
+            */
+        
+    }
+
+    //get_next_schedule(name, &time_end);
+
+    ESP_ERROR_CHECK(esp_timer_start_once(timer_date_text, (interval * 1000000)));
+
+}
+
+
+
+
+
+void update_time_valid(bool timevalid) {
+
+
+    uint32_t hour;
+    uint32_t min;
+    uint32_t sec;
+    uint32_t resto = 0;
+    static bool sync = false;
+
+
+    if (timevalid) {
+
+
+
+        if (!sync) {
+            get_now(&hour, &min, &sec);
+            ESP_ERROR_CHECK(esp_timer_create(&text_date_shot_timer_args, &timer_date_text));
+            resto = 60 - sec;
+            ESP_ERROR_CHECK(esp_timer_start_once(timer_date_text, (resto * 1000000)));
+            ESP_LOGI(TAG, "Actualizada la hora: %02d:%02d. Proximo intervalo :%d segundos", (int) hour, (int) min, (int) resto);
+
+            sync = true;
+            set_status_app(STATUS_APP_SYNCRONIZED);
+            //lv_update_time(hour, min);
+            set_lcd_update_time(hour, min, 0);
+/*
+            if (get_app_status() == STATUS_APP_AUTO) {
+                lv_update_lcd_schedule(true);
+
+            }
+  */          
+
+        } 
+
+    } else {
+        //lv_update_time(-1,-1);
+        set_lcd_update_time(-1, -1, 0);
+        //set_lcd_update_time(-1, -1);
+    }
+
+
+
+
+}
+
+
+
+
 
 
 
@@ -238,12 +389,22 @@ void notify_heating_gas_Boiler(bool action) {
 
 }
 
+void notify_status_factory(char* data_register) {
+
+    print_qr_register(data_register);
+    set_status_app(STATUS_APP_FACTORY);
+
+}
+
+
+
 void print_qr_register(char* register_data) {
 
     set_lcd_qr_register(register_data);
     set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_FACTORY);
     set_lcd_update_bluetooth(true);
 }
+
 
 
 static void set_status_starting() {
@@ -260,6 +421,8 @@ static void set_status_factory() {
 
     set_lcd_update_text_mode(TEXT_STATUS_APP_FACTORY);
     set_lcd_update_bluetooth(true);
+    set_lcd_update_wifi_status(false);
+    set_lcd_update_broker_status(false);
 }
 
 static void set_status_connecting() {
@@ -268,6 +431,27 @@ static void set_status_connecting() {
     set_lcd_update_text_mode(TEXT_STATUS_APP_CONNECTING);
     
 }
+
+static void set_status_syncing() {
+
+    set_lcd_update_text_mode(TEXT_STATUS_APP_SYNCING);
+
+
+}
+
+static void set_status_manual() {
+
+    set_lcd_update_text_mode(TEXT_STATUS_APP_MANUAL);
+
+}
+
+static void set_status_auto(uint8_t n_schedules) {
+
+    set_lcd_update_text_mode(TEXT_STATUS_APP_AUTO);
+
+
+}
+
 
 void set_status_app(status_app_t status) {
 
@@ -286,11 +470,37 @@ void set_status_app(status_app_t status) {
     if (status == STATUS_APP_CONNECTING) {
         if (current_status == STATUS_APP_FACTORY) {
             //Hemos acabado el registro y vamos a conectarnos.
-            set_lcd_hide_qr_register(true);
+            set_status_connecting();
+            current_status = STATUS_APP_CONNECTING;
+        }
+    }
+
+    if (status == STATUS_APP_CONNECTED) {
+
+        set_status_syncing();
+        current_status = STATUS_APP_SYNCING;
+
+    }
+
+    if (status == STATUS_APP_SYNCRONIZED) {
+        //Calcular si los schedules del termostato
+        uint8_t n_schedules=0;
+        if ((n_schedules = get_schedules_list()) == 0) {
+            set_status_manual();
+            current_status = STATUS_APP_MANUAL;
+        } else {
+            set_status_auto(n_schedules);
         }
     }
 
 
+
+
+}
+
+status_app_t get_current_status_app() {
+
+    return current_status;
 }
 
 
