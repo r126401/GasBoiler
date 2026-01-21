@@ -264,7 +264,7 @@ static void set_status_factory() {
 
 static void set_status_connecting() {
 
-    set_lcd_update_qr_confirmed(false);
+    set_lcd_hide_qr_register(true);
     set_lcd_update_text_mode(TEXT_STATUS_APP_CONNECTING);
     
 }
@@ -286,7 +286,7 @@ void set_status_app(status_app_t status) {
     if (status == STATUS_APP_CONNECTING) {
         if (current_status == STATUS_APP_FACTORY) {
             //Hemos acabado el registro y vamos a conectarnos.
-            set_lcd_update_qr_confirmed();
+            set_lcd_hide_qr_register(true);
         }
     }
 

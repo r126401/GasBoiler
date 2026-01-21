@@ -31,7 +31,6 @@ void  provisioning_device(char *register_data) {
     
     //lv_paint_qr_code(register_data);
     set_lcd_qr_register(register_data);
-    set_lcd_update_qr_confirmed(register_data);
     set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_FACTORY);
     set_lcd_update_bluetooth(true);
     //lv_update_show_bluetooth(true);
