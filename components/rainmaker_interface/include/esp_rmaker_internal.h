@@ -1,0 +1,1 @@
+../../../managed_components/espressif__esp_rainmaker/src/core/esp_rmaker_internal.h
