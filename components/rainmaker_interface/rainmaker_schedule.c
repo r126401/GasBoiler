@@ -232,8 +232,8 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
 
 
     }
-    if (candidate > -1) {
-
+    ESP_LOGI(TAG, "Candidate vale %d", candidate);
+    if (candidate > 0) {
         *min_of_trigger = candidate;
         ESP_LOGE(TAG, "posterior: triggers %d, *min_of_trigger : %d, setpoint_temperature : %.1f", triggers, *min_of_trigger, *setpoint_temperature);
     } else {
