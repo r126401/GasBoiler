@@ -184,8 +184,8 @@ static void receive_lcd_event(event_lcd_t event) {
         case UPDATE_SCHEDULE:
 
 
-        //ESP_LOGE(TAG, "se envia al lcd info de schedule: status: %d, par1: %d, par2: %d", event.status, (int) event.par1, (int) event.par2);
-        //lv_update_schedule(event.status, event.par1, event.par2);
+        ESP_LOGE(TAG, "se envia al lcd info de schedule: status: %d, par1: %d, par2: %d, par3: %d", event.status, (int) event.par1, (int) event.par2, (int) event.par3);
+        lv_update_schedule(event.status, event.par1, event.par2, event.par3);
 
         break;
 

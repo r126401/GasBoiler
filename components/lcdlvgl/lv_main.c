@@ -52,6 +52,12 @@ lv_obj_t *icon_heating;
 lv_obj_t *label_text_mode;
 lv_obj_t *lv_name_device;
 
+lv_obj_t *layout_schedule;
+lv_obj_t *text_from_schedule;
+lv_obj_t *text_to_schedule;
+lv_obj_t *label_percent;
+lv_obj_t *progress_schedule;
+
 lv_timer_t *timer_time;
 lv_timer_t *mytimer;
 
@@ -672,6 +678,49 @@ static void lv_create_device_name() {
 }
 
 
+static void lv_create_layout_schedule() {
+
+    configure_style_layout_schedule();
+	layout_schedule = lv_obj_create(screen_main_thermostat);
+    lv_obj_add_flag(layout_schedule, LV_OBJ_FLAG_HIDDEN);
+
+	lv_obj_set_flex_flow(layout_schedule, LV_FLEX_FLOW_ROW);
+    lv_obj_set_size(layout_schedule, 400, 30);
+    lv_obj_add_style(layout_schedule, get_style_layout_schedule(), LV_PART_MAIN);
+	text_from_schedule = lv_label_create(layout_schedule);
+    progress_schedule = lv_bar_create(layout_schedule);
+    lv_obj_set_size(progress_schedule, 250, 15);
+    configure_style_schedule();
+    lv_obj_add_style(progress_schedule, get_style_schedule(), LV_PART_INDICATOR);
+	text_to_schedule = lv_label_create(layout_schedule);
+    lv_bar_set_range(progress_schedule, 0, 100);
+ 	lv_label_set_text(text_from_schedule, "07:00");
+	lv_label_set_text(text_to_schedule, "18:50");
+    lv_obj_set_style_text_font(text_from_schedule, &lv_font_montserrat_16, LV_PART_MAIN);
+    lv_obj_set_style_text_font(text_to_schedule, &lv_font_montserrat_16, LV_PART_MAIN);
+    lv_obj_set_pos(layout_schedule, lv_pct(8), lv_pct(86));
+
+    lv_obj_t *container = lv_obj_create(screen_main_thermostat);
+    //lv_obj_align_to(container, layout_schedule, LV_ALIGN_OUT_TOP_MID, -0, 80);
+    lv_obj_set_pos(container, lv_pct(15), lv_pct(77));
+    lv_obj_set_size(container, 260, 20);
+    lv_obj_add_flag(container, LV_OBJ_FLAG_SCROLLABLE);
+
+    label_percent = lv_label_create(container);
+    lv_obj_center(label_percent);
+    lv_obj_add_flag(label_percent, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_style_text_font(label_percent, &lv_font_montserrat_16, LV_PART_MAIN);
+    lv_obj_add_style(container, get_style_layout_schedule(), LV_PART_MAIN);
+    
+    lv_bar_set_range(progress_schedule, 0, 100);
+
+    
+
+
+
+}
+
+
 void create_screen() {
 
     mytimer = NULL;
@@ -690,6 +739,7 @@ void create_screen() {
     lv_update_heating(false);
 	create_label_text_mode();
     lv_create_device_name();
+    lv_create_layout_schedule();
     lv_update_device_name(CONFIG_ESP_RMAKER_NAME_DEVICE);
     lv_update_text_mode(" ");
     ESP_LOGI(TAG, "Creada la pantalla principal");
@@ -741,4 +791,39 @@ void lv_update_hide_qr_code(bool action) {
     } else {
         lv_obj_remove_flag(qr_code, LV_OBJ_FLAG_HIDDEN);
     }
+}
+
+
+void lv_update_schedule(bool show, int min, int max, int index) {
+
+    int hour;
+    int minute;
+    int progress;
+    if (!show) {
+        lv_obj_add_flag(layout_schedule, LV_OBJ_FLAG_HIDDEN);
+        return;
+    }
+    lv_obj_remove_flag(layout_schedule, LV_OBJ_FLAG_HIDDEN);
+
+    hour = min/60;
+    minute = min%60;
+    lv_label_set_text_fmt(text_from_schedule, "%02d:%02d", hour, minute);
+    hour = max/60;
+    minute = max%60;
+    if (min > max) {
+        lv_label_set_text_fmt(text_to_schedule, "%02d:%02d*", hour, minute);
+    } else {
+        lv_label_set_text_fmt(text_to_schedule, "%02d:%02d", hour, minute);
+
+    }
+    
+
+    progress = (index - min) * 100 / (max - min);
+
+    ESP_LOGI(TAG, "min: %d, max: %d, index: %d, progress: %d", min, max, index, progress);
+
+    lv_bar_set_value(progress_schedule, progress, LV_ANIM_OFF);
+
+
+
 }

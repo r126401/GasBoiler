@@ -32,6 +32,7 @@ void lv_update_button_mode(bool enable);
 void lv_paint_qr_code(char *qrcode);
 void lv_update_device_name(char *device_name);
 void lv_update_hide_qr_code(bool action);
+void lv_update_schedule(bool show, int min, int max, int index);
 
 
 

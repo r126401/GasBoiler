@@ -446,15 +446,22 @@ static void set_status_manual() {
 
 }
 
-static void set_status_auto(uint8_t n_schedules) {
+static void set_status_auto(uint32_t min_of_day, uint32_t min_of_trigger, float setpoint_temperature) {
+
 
     set_lcd_update_text_mode(TEXT_STATUS_APP_AUTO);
+    set_lcd_update_schedule(true, min_of_day, min_of_trigger, min_of_day);
+
 
 
 }
 
 
 void set_status_app(status_app_t status) {
+
+    int min_of_day;
+    int min_of_trigger;
+    float setpoint_temperature;
 
     if ((status == STATUS_APP_UNDEFINED) || (status == STATUS_APP_STARTING)) {
         current_status = status;
@@ -484,13 +491,13 @@ void set_status_app(status_app_t status) {
     }
 
     if (status == STATUS_APP_SYNCRONIZED) {
-        //Calcular si los schedules del termostato
-        uint8_t n_schedules=0;
-        if ((n_schedules = get_schedules_list()) == 0) {
+        if (get_next_schedule(&min_of_day, &min_of_trigger, &setpoint_temperature) == 0) {
             set_status_manual();
             current_status = STATUS_APP_MANUAL;
         } else {
-            set_status_auto(n_schedules);
+
+            ESP_LOGE(TAG, "Schedule :%d, %d, %.1f",min_of_day, min_of_trigger, setpoint_temperature);
+            set_status_auto(min_of_day, min_of_trigger, setpoint_temperature);
         }
     }
 

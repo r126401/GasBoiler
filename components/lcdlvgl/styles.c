@@ -14,6 +14,8 @@ lv_style_t style_layout_temperature;
 lv_style_t style_layout_buttons_threshold;
 lv_style_t style_text_mode;
 lv_style_t style_layout_notification;
+lv_style_t style_layout_schedule;
+lv_style_t style_schedule;
 
 
 
@@ -58,6 +60,40 @@ lv_style_t *get_style_text_mode() {
 	return &style_text_mode;
 
 }
+
+lv_style_t *get_style_layout_schedule() {
+
+    return &style_layout_schedule;
+}
+
+lv_style_t *get_style_schedule() {
+
+    return &style_schedule;
+}
+
+
+void configure_style_layout_schedule() {
+
+    lv_style_init(&style_layout_schedule);
+    lv_style_set_bg_opa(&style_layout_schedule, LV_OPA_TRANSP);
+    lv_style_set_border_width(&style_layout_schedule, 0);
+    lv_style_set_pad_all(&style_layout_schedule, 0);
+
+}
+
+
+
+void configure_style_schedule() {
+
+    lv_style_init(&style_schedule);
+    lv_style_set_bg_opa(&style_schedule, LV_OPA_COVER);
+    lv_style_set_bg_color(&style_schedule, lv_palette_main(LV_PALETTE_BLUE));
+    lv_style_set_bg_grad_color(&style_schedule, lv_palette_main(LV_PALETTE_RED));
+    lv_style_set_bg_grad_dir(&style_schedule, LV_GRAD_DIR_HOR);
+ 
+
+}
+
 
 void configure_style_buttons_threshold() {
 
