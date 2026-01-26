@@ -27,8 +27,7 @@ const esp_timer_create_args_t text_date_shot_timer_args = {
 };
 
 
-xQueueHandle event_queue_app;
-static const char *TAG = "events_app";
+static const char *TAG = "app_interface.c";
 extern float current_threshold;
 extern EventGroupHandle_t evt_between_task;
 status_app_t current_status;
@@ -356,7 +355,12 @@ void notify_setpoint_temperature(float setpoint_temperature) {
     float current_temperature;
     THERMOSTAT_ACTION action;
 
-    error = platform_notify_setpoint_temperature(setpoint_temperature);
+   
+    //set_lcd_update_threshold_temperature(setpoint_temperature);
+    current_temperature = get_current_temperature();
+    
+    ESP_LOGE(TAG, "Vamos a enviar el setpoint temperature");
+     error = platform_notify_setpoint_temperature(setpoint_temperature);
     if (error == ESP_OK) {
 
         ESP_LOGI(TAG, "Setpoint temperature de %.1f enviado a la cloud", setpoint_temperature);
@@ -364,8 +368,6 @@ void notify_setpoint_temperature(float setpoint_temperature) {
 
                 ESP_LOGE(TAG, "No se ha podido enviar el setpoint temperature a la cloud");
     }
-
-    current_temperature = get_current_temperature();
     thermostat_action(current_temperature);
 
 }
@@ -415,6 +417,7 @@ static void set_status_starting() {
     set_lcd_update_bluetooth(false);
     set_lcd_update_broker_status(false);
     set_lcd_update_wifi_status(false);
+        
 }
 
 
@@ -449,8 +452,15 @@ static void set_status_manual() {
 static void set_status_auto(uint32_t min_of_day, uint32_t min_of_trigger, float setpoint_temperature) {
 
 
+    //Se cambia la etiqueta a AUTO
     set_lcd_update_text_mode(TEXT_STATUS_APP_AUTO);
+    //Se actualiza el schedule en el display
     set_lcd_update_schedule(true, min_of_day, min_of_trigger, min_of_day);
+    //Se actualiza el setpoint temperatura en el display y se actua sobre la logica del termostato en base al umbral actualizado
+    if (setpoint_temperature == -1.0f) setpoint_temperature = get_setpoint_temperature();
+    set_lcd_update_threshold_temperature(setpoint_temperature);
+    set_lcd_update_button_mode_clickable(true);
+    notify_setpoint_temperature(setpoint_temperature);
 
 
 
@@ -493,11 +503,20 @@ void set_status_app(status_app_t status) {
     if (status == STATUS_APP_SYNCRONIZED) {
         if (get_next_schedule(&min_of_day, &min_of_trigger, &setpoint_temperature) == 0) {
             set_status_manual();
+            set_lcd_update_button_mode_clickable(false);
             current_status = STATUS_APP_MANUAL;
         } else {
 
             ESP_LOGE(TAG, "Schedule :%d, %d, %.1f",min_of_day, min_of_trigger, setpoint_temperature);
             set_status_auto(min_of_day, min_of_trigger, setpoint_temperature);
+        }
+    }
+
+    if (status == STATUS_APP_MANUAL) {
+
+        if (current_status == STATUS_APP_AUTO) {
+
+            set_lcd_update_schedule(false, -1, -1, -1);
         }
     }
 

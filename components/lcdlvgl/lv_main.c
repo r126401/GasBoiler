@@ -18,6 +18,7 @@
 #include "time.h"
 #include "esp_log.h"
 #include "app_interface.h"
+#include "app_events.h"
 
 
 static char *TAG = "lv_main.c";
@@ -439,7 +440,8 @@ void timer_cb(lv_timer_t *timer) {
     //ESP_LOGI(TAG, "THRESHOLD VALE, %.1f", *threshold);
 
     //send_event_app_threshold(*threshold);
-    notify_setpoint_temperature(*threshold);
+    send_event_app_setpoint_temperature(*threshold);
+    //notify_setpoint_temperature(*threshold);
     lv_obj_set_style_text_color(text_threshold, lv_color_hex(LV_COLOR_TEXT_NOTIFICATION), LV_PART_MAIN);
     pulse = false;
 
@@ -473,6 +475,7 @@ static void lv_event_handler_button_up(lv_event_t *event) {
 
     mytimer = lv_timer_create(timer_cb, 3000, &threshold);
     lv_timer_set_repeat_count(mytimer, 1);
+    //send_event_app_setpoint_temperature(threshold);
     
     lv_update_threshold_temperature(threshold);
 
@@ -511,19 +514,20 @@ static void lv_event_handler_button_mode(lv_event_t *event) {
     if (strcmp(lv_label_get_text(label_mode), "M") == 0) {
 
 
-        //lv_update_label_mode("A");
-        //lv_update_text_mode("MANUAL");
-        set_button_threshold_clickable(false);
+        lv_update_label_mode("A");
+        lv_update_text_mode("MANUAL");
+        //set_button_threshold_clickable(false);
+        //set_status_app(STATUS_APP_MANUAL);
         //send_event_app_status(EVENT_APP_MANUAL);
 
 
 
     } else {
 
-        //lv_update_label_mode("M");
-        //lv_update_text_mode("AUTO");
-        set_button_threshold_clickable(true);
-        //send_event_app_status(EVENT_APP_AUTO);
+        lv_update_label_mode("M");
+        lv_update_text_mode("AUTO");
+        //set_button_threshold_clickable(true);
+        //set_status_app(EVENT_APP_AUTO);
 
     }
 
@@ -557,6 +561,7 @@ static void lv_event_handler_button_down(lv_event_t *event) {
 
     mytimer = lv_timer_create(timer_cb, 3000, &threshold);
     lv_timer_set_repeat_count(mytimer, 1);
+    //send_event_app_setpoint_temperature(threshold);
 
     lv_update_threshold_temperature(threshold);
 
@@ -826,4 +831,14 @@ void lv_update_schedule(bool show, int min, int max, int index) {
 
 
 
+}
+
+void lv_enable_button_mode(bool enable) {
+
+    if (enable) {
+        lv_obj_add_flag(button_mode, LV_OBJ_FLAG_CLICKABLE);
+    } else {
+        lv_obj_remove_flag(button_mode, LV_OBJ_FLAG_CLICKABLE);
+
+    }
 }

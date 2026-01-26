@@ -184,12 +184,20 @@ void platform_factory_reset_device() {
 esp_err_t platform_notify_setpoint_temperature(float setpoint_temperature) {
 
     esp_rmaker_param_t *param;
-
+    ESP_LOGE(TAG, "Estamos en platform_notify_setpoint_temperature");
     param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_TYPE_PARAM_SETPOINT_TEMPERATURE_NAME);
     if (param != NULL) {
-        esp_rmaker_param_update_and_report(param, esp_rmaker_float(setpoint_temperature));
+        if (esp_rmaker_param_update_and_report(param, esp_rmaker_float(setpoint_temperature)) == ESP_OK) {
+            ESP_LOGI(TAG, "Enviado el umbral de temperatura");
         return ESP_OK;
+        } else {
+             ESP_LOGE(TAG, "No se ha podido reportar a la cloud el setpoint_temperature");
+             return ESP_FAIL;
+
+        }
+        
     } else {
+        ESP_LOGE(TAG, "No se ha podido reportar a la cloud el setpoint_temperature");
 
         return ESP_FAIL;
     }
@@ -673,9 +681,9 @@ void rainmaker_interface_init_environment() {
 
     esp_rmaker_system_serv_config_t system_serv_config = {
      .flags = SYSTEM_SERV_FLAGS_ALL,
-     .reboot_seconds = 2,
-     .reset_seconds = 2,
-     .reset_reboot_seconds = 2
+     .reboot_seconds = 0,
+     .reset_seconds = 0,
+     .reset_reboot_seconds = 0
     };
 
     esp_rmaker_system_service_enable(&system_serv_config);

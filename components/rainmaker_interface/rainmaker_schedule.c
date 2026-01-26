@@ -79,6 +79,7 @@ static bool apply_mask_today(int tm_wday, uint8_t rm_mask)
 static float extract_setpoint_temperature(cJSON *item) {
 
     cJSON *action;
+    cJSON *device;
     cJSON *obj;
 
     if ((action = cJSON_GetObjectItem(item, "action")) == NULL) {
@@ -86,13 +87,13 @@ static float extract_setpoint_temperature(cJSON *item) {
         return ESP_FAIL;
     }
 
-    if ((obj = cJSON_GetObjectItem(action, CONFIG_ESP_RMAKER_NAME_DEVICE)) == NULL) {
+    if ((device = cJSON_GetObjectItem(action, CONFIG_ESP_RMAKER_NAME_DEVICE)) == NULL) {
         ESP_LOGE(TAG, "Error al extraer el nombre del dispositivo: %s", cJSON_Print(action));
         return ESP_FAIL;
     }
 
-    if ((obj = cJSON_GetObjectItem(obj, CONFIG_ESP_RMAKER_TYPE_PARAM_SETPOINT_TEMPERATURE_NAME)) == NULL) {
-        ESP_LOGE(TAG, "Error al extraer el nombre del dispositivo: %s", cJSON_Print(action));
+    if ((obj = cJSON_GetObjectItem(device, CONFIG_ESP_RMAKER_TYPE_PARAM_SETPOINT_TEMPERATURE_NAME)) == NULL) {
+        ESP_LOGE(TAG, "Error al extraer el nombre del setpoint temperature: %s", cJSON_Print(action));
         return ESP_FAIL;
     }
 
@@ -111,6 +112,7 @@ static uint8_t extract_trigger_data(cJSON *trigger, int *min_of_trigger, int *ma
 
     // Obtenemos los datos del trigger
     int j, tam;
+    ESP_LOGE(TAG, "%s", cJSON_Print(trigger));
     tam = cJSON_GetArraySize(trigger);
     for (j=0;j<tam;j++) {
         index = cJSON_GetArrayItem(trigger, j);
@@ -157,6 +159,7 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
     uint8_t triggers = 0;
     float prev_setpoint = -1;
 
+    *setpoint_temperature = -1;
 
     param_list = esp_rmaker_get_node_params();
 
@@ -201,27 +204,7 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
         }
 
         extract_trigger_data(trigger, min_of_trigger, &mask_of_trigger);
-/*
-        // Obtenemos los datos del trigger
-        int j, tam;
-        tam = cJSON_GetArraySize(trigger);
-        for (j=0;j<tam;j++) {
-            index = cJSON_GetArrayItem(trigger, j);
-            if ((obj = cJSON_GetObjectItem(index, "m")) == NULL) {
-                ESP_LOGE(TAG, "Error al extraer el parametro m: %s", cJSON_Print(index));
-                return ESP_FAIL;
-            }
 
-            *min_of_trigger = cJSON_GetNumberValue(obj);
-
-            if ((obj = cJSON_GetObjectItem(index, "d")) == NULL) {
-                ESP_LOGE(TAG, "Error al extraer el parametro d: %s", cJSON_Print(index));
-                return ESP_FAIL;
-            }
-
-            mask_of_trigger = cJSON_GetNumberValue(obj);
-        }
-*/
         //Chequeamos si la mascara de la semana coincide.
         time(&now);
         localtime_r(&now, &fecha);
@@ -231,6 +214,7 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
             continue;
         }
 
+        //calculo del umbral temperatura a asignar. Será el intervalo anterior mas cercano a la hora actual
         *min_of_day = fecha.tm_hour * 60 + fecha.tm_min;
         ESP_LOGI(TAG, "min_of_day: %d, min_of_trigger: %d", min_of_day, min_of_trigger);
         triggers++;
@@ -238,14 +222,12 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
             ESP_LOGW(TAG, "trigger anterior a la hora actual");
             if (prev_candidate == -1) {
                 ESP_LOGW(TAG, "Primer schedule previo");
-                prev_candidate = *min_of_trigger;
-                prev_setpoint = extract_setpoint_temperature(item_schedule);
+                *setpoint_temperature = extract_setpoint_temperature(item_schedule);
                 ESP_LOGW(TAG, "Primer schedule previo. prev_setpoint: %.1f", prev_setpoint);
             } else {
                 if (prev_candidate > *min_of_trigger) {
                     ESP_LOGW(TAG, "Nuevo candidato para el prev_schedule");
-                    prev_candidate = *min_of_trigger;
-                    prev_setpoint = extract_setpoint_temperature(item_schedule);
+                    *setpoint_temperature = extract_setpoint_temperature(item_schedule);
                 } else {
                     ESP_LOGW(TAG, "Seguimos iterando para el prev");
                 }
@@ -257,12 +239,12 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
             ESP_LOGW(TAG, "trigger posterior a la hora actual");
             if (candidate == -1 ) {
                 candidate = *min_of_trigger;
-                *setpoint_temperature = extract_setpoint_temperature(item_schedule);
+                //*setpoint_temperature = extract_setpoint_temperature(item_schedule);
             } else {
                 if (candidate < *min_of_trigger) {
                     ESP_LOGW(TAG, "Nuevo candidato con indice %d", i);
                     candidate = *min_of_trigger;
-                    *setpoint_temperature = extract_setpoint_temperature(item_schedule);
+                    //*setpoint_temperature = extract_setpoint_temperature(item_schedule);
 
                 } else {
                     ESP_LOGW(TAG, "Seguimos iterando");
@@ -272,17 +254,9 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
 
 
     }
-    ESP_LOGI(TAG, "Candidate vale %d", candidate);
-    if (candidate > 0) {
-        *min_of_trigger = candidate;
-        ESP_LOGE(TAG, "posterior: triggers %d, *min_of_trigger : %d, setpoint_temperature : %.1f", triggers, *min_of_trigger, *setpoint_temperature);
-    } else {
-        ESP_LOGE(TAG, "previo: triggers %d, *min_of_trigger : %d, setpoint_temperature : %.1f", triggers, prev_candidate, prev_setpoint);
-        *setpoint_temperature = prev_setpoint;
-        *min_of_trigger = prev_candidate;
-     
 
-    }
+     ESP_LOGE(TAG, "nº de schedules activos: %d, *min_of_trigger : %d, setpoint_temperature : %.1f", triggers, *min_of_trigger, *setpoint_temperature); 
+   
 
     return triggers;
 

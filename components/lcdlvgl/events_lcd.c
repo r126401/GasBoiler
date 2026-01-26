@@ -10,8 +10,6 @@
 #include "events_lcd.h"
 #include "lv_main.h"
 
-//#include "../lvgl.h"
-
 
 static char *TAG = "events_lcd.c";
 extern xQueueHandle event_queue;
@@ -96,6 +94,12 @@ char* event_lcd_2_mnemonic(EVENT_TYPE_LCD type_lcd) {
         
         break;
 
+        case UPDATE_BUTTON_MODE:
+        
+        strncpy(mnemonic, "UPDATE_BUTTON_MODE", 30);
+
+        break;
+
         case QR_REGISTER:
 
         strncpy(mnemonic, "QR_REGISTER", 30);
@@ -118,6 +122,8 @@ char* event_lcd_2_mnemonic(EVENT_TYPE_LCD type_lcd) {
         case UPDATE_BUTTON_INSTALATION:
         strncpy(mnemonic, "UPDATE_BUTTON_INSTALATION", 30);
         break;
+
+       
     }
 
         return mnemonic;
@@ -178,6 +184,7 @@ static void receive_lcd_event(event_lcd_t event) {
         case UPDATE_THRESHOLD_TEMPERATURE:
 
             lv_update_threshold_temperature(event.value);
+            ESP_LOGE(TAG, "Actualizado setpoint temperature en el display");
 
         break;
 
@@ -199,6 +206,10 @@ static void receive_lcd_event(event_lcd_t event) {
         //lv_update_text_schedule(event.par1, event.par2);
 
         break;
+
+        case UPDATE_BUTTON_MODE:
+            lv_update_button_mode(event.status);
+            break;
 
         case UPDATE_PERCENT:
 
@@ -230,7 +241,6 @@ static void receive_lcd_event(event_lcd_t event) {
 
         //lv_set_button_instalation(event.status);
         break;
-
 
 
         default:
@@ -419,7 +429,14 @@ void set_lcd_qr_register(char *register_data) {
     update_lcd_char(QR_REGISTER, register_data);
 }
 
+void set_lcd_update_button_mode_clickable(bool clickable) {
+
+    update_lcd_bool(UPDATE_BUTTON_MODE, clickable);
+}
+
 void set_lcd_hide_qr_register() {
 
     update_lcd_bool(QR_CONFIRMED, true);
 }
+
+

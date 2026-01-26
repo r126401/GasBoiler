@@ -10,6 +10,7 @@
 #include "thermostat_task.h"
 #include "rainmaker_interface.h"
 #include "app_interface.h"
+#include "app_events.h"
 
 EventGroupHandle_t evt_between_task;
 
@@ -19,9 +20,11 @@ void app_main(void)
 
     evt_between_task = xEventGroupCreate();
     init_lcdrgb();
+    create_event_app_task();
     set_status_app(STATUS_APP_STARTING);
     create_task_thermostat();
     init_app_environment();
+
     
 
 
