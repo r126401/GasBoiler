@@ -516,9 +516,10 @@ static void lv_event_handler_button_mode(lv_event_t *event) {
 
         lv_update_label_mode("A");
         lv_update_text_mode("MANUAL");
-        //set_button_threshold_clickable(false);
+        
+        set_button_threshold_clickable(false);
         //set_status_app(STATUS_APP_MANUAL);
-        //send_event_app_status(EVENT_APP_MANUAL);
+        send_event_app_status(EVENT_APP_MANUAL);
 
 
 
@@ -526,8 +527,8 @@ static void lv_event_handler_button_mode(lv_event_t *event) {
 
         lv_update_label_mode("M");
         lv_update_text_mode("AUTO");
-        //set_button_threshold_clickable(true);
-        //set_status_app(EVENT_APP_AUTO);
+        set_button_threshold_clickable(true);
+        send_event_app_status(EVENT_APP_AUTO);
 
     }
 
@@ -804,6 +805,19 @@ void lv_update_schedule(bool show, int min, int max, int index) {
     int hour;
     int minute;
     int progress;
+
+    if ((show == true) && (min == -1) && (max == -1)) {
+
+        // Solo incrementamos el index
+        index = lv_bar_get_value(progress_schedule);
+        index++;
+        lv_bar_set_value(progress_schedule, index, LV_ANIM_OFF);
+        ESP_LOGI(TAG, "Progress ahora vale %d", index);
+        return;
+
+    }
+
+    lv_bar_set_range(progress_schedule, min, max);
     if (!show) {
         lv_obj_add_flag(layout_schedule, LV_OBJ_FLAG_HIDDEN);
         return;

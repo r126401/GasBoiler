@@ -23,3 +23,4 @@ typedef struct event_app_t {
 
 void create_event_app_task();
 void send_event_app_setpoint_temperature(float setpoint_temperature);
+void send_event_app_status(EVENT_APP status);

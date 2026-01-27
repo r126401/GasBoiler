@@ -11,6 +11,7 @@
 #include "cJSON.h"
 #include "esp_rmaker_internal.h"
 #include "app_interface.h"
+#include "rainmaker_schedule.h"
 
 
 static char *TAG = "rainmaker_schedule.c";
@@ -138,6 +139,20 @@ static uint8_t extract_trigger_data(cJSON *trigger, int *min_of_trigger, int *ma
 }
 
 
+static void print_schedule(bool enabled, int min_of_trigger, float setpoint_temperature) {
+
+    int hour;
+    int minute;
+
+    hour = min_of_trigger/60;
+    minute = min_of_trigger%60;
+    ESP_LOGI(TAG, "schedule: enabled: %d --- %02d:%02d --- %.1f", enabled, hour, minute, setpoint_temperature);
+
+
+
+}
+
+
 uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_temperature) {
 
     char *param_list;
@@ -158,6 +173,7 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
     int mask_of_trigger = 0;
     uint8_t triggers = 0;
     float prev_setpoint = -1;
+    bool enabled;
 
     *setpoint_temperature = -1;
 
@@ -192,7 +208,7 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
         item_schedule = cJSON_GetArrayItem(schedules, i);
 
         //Comprobamos si el schedule esta habilitado
-        if (cJSON_IsTrue(cJSON_GetObjectItem(item_schedule, "enabled")) == false) {
+        if ((enabled = cJSON_IsTrue(cJSON_GetObjectItem(item_schedule, "enabled"))) == false) {
             ESP_LOGE(TAG, "Este schedule esta inhibido %s", cJSON_Print(item_schedule));
             continue;
         }
@@ -213,6 +229,8 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
             ESP_LOGE(TAG, "La mascara no mapea y este schedule no es para hoy");
             continue;
         }
+
+        
 
         //calculo del umbral temperatura a asignar. Será el intervalo anterior mas cercano a la hora actual
         *min_of_day = fecha.tm_hour * 60 + fecha.tm_min;
@@ -251,13 +269,117 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
                 }
             }
         } 
+        print_schedule(enabled, *min_of_trigger, *setpoint_temperature);
 
 
     }
-
+    
      ESP_LOGE(TAG, "nº de schedules activos: %d, *min_of_trigger : %d, setpoint_temperature : %.1f", triggers, *min_of_trigger, *setpoint_temperature); 
-   
+     print_schedule(1, *min_of_trigger, *setpoint_temperature);
 
     return triggers;
+
+}
+
+
+static void print_schedules(int n_schedules, schedules_t *elements) {
+
+    int i;
+    for (i=0;i<n_schedules;i++) {
+
+        printf("schedule: %d, %d, %d, %d, %02d:%02d\n", elements[i].index,elements[i].enabled, elements[i].mask_trigger, elements[i].trigger, elements[i].trigger/60, elements[i].trigger%60);
+    }
+}
+
+/******ordenar schedules */
+
+// Comparador ascendente por trigger
+int comparar_por_trigger(const void *a, const void *b) {
+    const schedules_t *sa = (const schedules_t *)a;
+    const schedules_t *sb = (const schedules_t *)b;
+
+    if (sa->trigger < sb->trigger) return -1;
+    if (sa->trigger > sb->trigger) return 1;
+    return 0;
+}
+int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_temperature) {
+
+    char *param_list;
+    cJSON *json;
+    cJSON *programacion;
+    cJSON *schedules;
+    cJSON *item_schedule;
+    cJSON *trigger;
+    bool enabled;
+    int n_schedules;
+    int i;
+    int mask_of_trigger = 0;
+    schedules_t *elements = NULL;
+
+    
+    param_list = esp_rmaker_get_node_params();
+
+    json = cJSON_Parse(param_list);
+
+    if (json == NULL) {
+
+        ESP_LOGE(TAG, "Error al extraer los schedules");
+        return ESP_FAIL;
+    }
+
+    if ((programacion = cJSON_GetObjectItem(json, "schedule")) == NULL) {
+
+        ESP_LOGW(TAG, "No hay schedules");
+        return ESP_FAIL;
+
+    }
+
+    if ((schedules = cJSON_GetObjectItem(programacion, "schedules")) == NULL) {
+
+        ESP_LOGE(TAG, "Habia etiqueta pero no hay schedules");
+        return ESP_FAIL;
+    }
+    n_schedules = cJSON_GetArraySize(schedules);
+    if (n_schedules > 0) {
+        elements = (schedules_t*) calloc(n_schedules, sizeof(schedules_t));
+        if (elements == NULL) {
+            ESP_LOGE(TAG, "Fallo al reservar memoria para los schedules");
+            return ESP_FAIL;
+        }
+    }
+
+   //Bucle para recorrer todos los schedules
+    for (i=0;i<n_schedules;i++) {
+
+        ESP_LOGE(TAG, "Bucle %d", i);
+        item_schedule = cJSON_GetArrayItem(schedules, i);
+
+        //Comprobamos si el schedule esta habilitado
+        if ((enabled = cJSON_IsTrue(cJSON_GetObjectItem(item_schedule, "enabled"))) == false) {
+            ESP_LOGE(TAG, "Este schedule esta inhibido %s", cJSON_Print(item_schedule));
+            continue;
+        }
+
+        if ((trigger = cJSON_GetObjectItem(item_schedule, "triggers")) == NULL) {
+
+            ESP_LOGE(TAG, "Error al extraer el trigger");
+            return ESP_FAIL;
+        }
+
+        extract_trigger_data(trigger, min_of_trigger, &mask_of_trigger);
+        elements[i].index = i;
+        elements[i].enabled = enabled;
+        elements[i].mask_trigger = mask_of_trigger;
+        elements[i].trigger = *min_of_trigger;
+    }
+
+    print_schedules(n_schedules, elements);
+   //int n = sizeof(elements) / sizeof(elements[0]);
+
+    // Ordenamos en el mismo array
+    qsort(elements, n_schedules, sizeof(schedules_t), comparar_por_trigger);
+    print_schedules(n_schedules, elements);
+
+    return 0;
 
 }

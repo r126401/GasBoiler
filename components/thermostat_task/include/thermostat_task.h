@@ -6,11 +6,7 @@
 
 
 
-typedef enum STATUS_RELAY {
-    INDETERMINADO = -1,
-    OFF = 0,
-    ON = 1
-}STATUS_RELAY;
+
 
 typedef enum THERMOSTAT_ACTION {
 	NO_TOGGLE_THERMOSTAT,
@@ -35,4 +31,5 @@ typedef enum THERMOSTAT_MODE {
 
 void create_task_thermostat();
 THERMOSTAT_ACTION thermostat_action(float current_temperature);
+
 

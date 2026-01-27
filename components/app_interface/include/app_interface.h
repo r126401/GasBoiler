@@ -33,7 +33,9 @@
 #define TEXT_STATUS_APP_AUTO "AUTO"
 #define TEXT_STATUS_APP_MANUAL "MANUAL"
 #define TEXT_STATUS_APP_STARTING "INICIALIZANDO"
+#define TEXT_STATUS_APP_SYNCHRONIZED "SINCRONIZADO"
 #define TEXT_STATUS_APP_CONNECTING  "CONECTANDO"
+#define TEXT_STATUS_APP_CONNECTED  "CONECTADO"
 #define TEXT_STATUS_APP_SYNCING "SINCRONIZANDO"
 #define TEXT_STATUS_APP_UPGRADING "ACTUALIZANDO"
 #define TEXT_STATUS_APP_UNDEFINED "UNDEFINED"
@@ -54,7 +56,7 @@ typedef enum status_app_t {
    STATUS_APP_CONNECTING,
    STATUS_APP_CONNECTED,
    STATUS_APP_SYNCING,
-   STATUS_APP_SYNCRONIZED,
+   STATUS_APP_SYNCHRONIZED,
    STATUS_APP_UPGRADING,
    STATUS_APP_UNDEFINED
 
@@ -62,7 +64,11 @@ typedef enum status_app_t {
 
 
 
-
+typedef enum {
+    INDETERMINADO = -1,
+    OFF = 0,
+    ON = 1
+} STATUS_RELAY;
 
 
 
@@ -74,6 +80,7 @@ int get_read_interval();
 status_app_t get_status_gas_boiler();
 float get_current_temperature();
 float get_temperature_correction();
+status_app_t get_current_status_app();
 void reset_device();
 void factory_reset_device();
 void notify_setpoint_temperature(float setpoint_temperature);
@@ -87,3 +94,4 @@ void notify_mqtt_status(bool status);
 void time_refresh(void *arg);
 void update_time_valid(bool timevalid);
 bool get_now(uint32_t *hour, uint32_t *min, uint32_t *sec);
+STATUS_RELAY relay_operation(STATUS_RELAY op);

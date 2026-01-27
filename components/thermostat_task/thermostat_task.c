@@ -93,36 +93,7 @@ THERMOSTAT_MODE get_thermostat_mode() {
 }
 
 
-enum STATUS_RELAY IRAM_ATTR relay_operation(STATUS_RELAY op) {
 
-	
-	if (gpio_get_level(CONFIG_RELAY_GPIO) == OFF){
-		if (op == ON) {
-			gpio_set_level(CONFIG_RELAY_GPIO, op);
-			ESP_LOGE(TAG, "Accion: OFF->ON");
-                notify_heating_gas_Boiler(op);
-		} else {
-			ESP_LOGE(TAG, "Accion: OFF->OFF");
-			}
-	} else {
-
-		if (op == ON) {
-			ESP_LOGE(TAG, "Accion: ON->ON");
-		} else {
-			gpio_set_level(CONFIG_RELAY_GPIO, op);
-			ESP_LOGE(TAG, "Accion: ON->OFF");
-            notify_heating_gas_Boiler(op);
-
-			}
-	}
-
-
-
-    //set_lcd_update_heating(op);
-
-
-	return gpio_get_level(CONFIG_RELAY_GPIO);
-}
 
 
 static enum THERMOSTAT_ACTION calcular_accion_termostato(STATUS_RELAY *accion, float current_temperature) {
@@ -171,7 +142,7 @@ static enum THERMOSTAT_ACTION calcular_accion_termostato(STATUS_RELAY *accion, f
 
 THERMOSTAT_ACTION thermostat_action(float current_temperature) {
 
-	enum STATUS_RELAY accion_rele;
+	STATUS_RELAY accion_rele;
 	enum THERMOSTAT_ACTION accion_termostato;
 	
 	float temperature = -1;

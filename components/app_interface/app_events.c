@@ -108,11 +108,12 @@ void receive_event_app(event_app_t event) {
             break;
 
         case EVENT_APP_MANUAL:
+            ESP_LOGI(TAG, "Recibido evento para cambiar a STATUS_APP_MANUAL");
             set_status_app(STATUS_APP_MANUAL);
             break;
 
         case EVENT_APP_AUTO:
-
+            ESP_LOGI(TAG, "Recibido evento para cambiar a EVENT_APP_AUTO");
             set_status_app(EVENT_APP_AUTO);
         break;
 
@@ -166,7 +167,7 @@ void create_event_app_task() {
 
 
 
-	xTaskCreatePinnedToCore(event_app_task, "event_app_task", /*CONFIG_RESOURCE_EVENT_TASK*/ 1024 * 3, NULL, 0, NULL,0);
+	xTaskCreatePinnedToCore(event_app_task, "event_app_task", /*CONFIG_RESOURCE_EVENT_TASK*/ 1024 * 4, NULL, 0, NULL,0);
 	ESP_LOGW(TAG, "TAREA DE EVENTOS DE APLICACION CREADA CREADA");
 
 
@@ -177,7 +178,7 @@ static void send_event_app(event_app_t event) {
 
 
 	ESP_LOGW(TAG, " envio de evento app %s", event_app_2mnemonic(event.event_app));
-	if ( xQueueSend(event_queue_app, &event, 0) != pdPASS) {
+	if ( xQueueSend(event_queue_app, &event, pdMS_TO_TICKS(20)) != pdPASS) {
 		ESP_LOGE(TAG, "no se ha podido enviar el evento");
 
 	}

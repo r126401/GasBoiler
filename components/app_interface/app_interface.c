@@ -14,6 +14,8 @@
 #include "events_lcd.h"
 #include "esp_timer.h"
 #include "esp_sntp.h"
+#include "driver/gpio.h"
+
 
 #include <string.h>
 #include "strings.h"
@@ -109,10 +111,10 @@ void time_refresh(void *arg) {
 
         
         ESP_LOGI(TAG, "Actualizada la hora: %02d:%02d. proximo intervalo: %d", (int) hour, (int) min, (int) interval);
-       /* if (get_app_status() == STATUS_APP_AUTO) {
-            lv_update_lcd_schedule(true);
+       if (get_current_status_app() == STATUS_APP_AUTO) {
+            set_lcd_update_schedule(true, -1, -1, -1);
         }
-            */
+            
         
     }
 
@@ -148,7 +150,7 @@ void update_time_valid(bool timevalid) {
             ESP_LOGI(TAG, "Actualizada la hora: %02d:%02d. Proximo intervalo :%d segundos", (int) hour, (int) min, (int) resto);
 
             sync = true;
-            set_status_app(STATUS_APP_SYNCRONIZED);
+            set_status_app(STATUS_APP_SYNCHRONIZED);
             //lv_update_time(hour, min);
             set_lcd_update_time(hour, min, 0);
 /*
@@ -242,10 +244,21 @@ char* status2mnemonic(status_app_t status) {
 
         break;
 
+        case STATUS_APP_CONNECTED:
+           strncpy(mnemonic, TEXT_STATUS_APP_CONNECTED, 30);
+
+        break;
+
         case STATUS_APP_SYNCING:
            strncpy(mnemonic, TEXT_STATUS_APP_SYNCING, 30);
 
         break;
+
+        case STATUS_APP_SYNCHRONIZED:
+            strncpy(mnemonic, TEXT_STATUS_APP_SYNCHRONIZED, 30);
+
+        break;
+
 
         case STATUS_APP_UPGRADING:
            strncpy(mnemonic, TEXT_STATUS_APP_UPGRADING, 30);
@@ -267,7 +280,7 @@ char* status2mnemonic(status_app_t status) {
 
 status_app_t get_status() {
 
-    return STATUS_APP_ERROR;
+    return current_status;
 }
 
 
@@ -357,7 +370,7 @@ void notify_setpoint_temperature(float setpoint_temperature) {
 
    
     //set_lcd_update_threshold_temperature(setpoint_temperature);
-    current_temperature = get_current_temperature();
+    
     
     ESP_LOGE(TAG, "Vamos a enviar el setpoint temperature");
      error = platform_notify_setpoint_temperature(setpoint_temperature);
@@ -368,6 +381,7 @@ void notify_setpoint_temperature(float setpoint_temperature) {
 
                 ESP_LOGE(TAG, "No se ha podido enviar el setpoint temperature a la cloud");
     }
+    current_temperature = get_current_temperature();
     thermostat_action(current_temperature);
 
 }
@@ -446,6 +460,7 @@ static void set_status_syncing() {
 static void set_status_manual() {
 
     set_lcd_update_text_mode(TEXT_STATUS_APP_MANUAL);
+    set_lcd_update_button_mode_clickable(false);
 
 }
 
@@ -466,6 +481,24 @@ static void set_status_auto(uint32_t min_of_day, uint32_t min_of_trigger, float 
 
 }
 
+bool exists_shcedules(int *min_of_day, int *min_of_trigger, float *setpoint_temperature) {
+
+
+    get_data_schedules(min_of_day, min_of_trigger, setpoint_temperature);
+
+    if (get_next_schedule(min_of_day, min_of_trigger, setpoint_temperature) == 0) {
+        ESP_LOGI(TAG, "mode is STATUS_APP_MANUAL");
+        return false;
+    } else {
+
+        ESP_LOGE(TAG, "mode is STATUS_APP_AUTO, Schedule :%d, %d, %.1f",*min_of_day, *min_of_trigger, *setpoint_temperature);
+        return true;
+    }
+}
+
+
+
+
 
 void set_status_app(status_app_t status) {
 
@@ -473,62 +506,111 @@ void set_status_app(status_app_t status) {
     int min_of_trigger;
     float setpoint_temperature;
 
+
     if ((status == STATUS_APP_UNDEFINED) || (status == STATUS_APP_STARTING)) {
-        current_status = status;
         set_status_starting();
-        return;
         
     }
 
     if (status == STATUS_APP_FACTORY) {
         current_status = status;
-        return;
     }
 
     if (status == STATUS_APP_CONNECTING) {
         if (current_status == STATUS_APP_FACTORY) {
             //Hemos acabado el registro y vamos a conectarnos.
             set_status_connecting();
-            current_status = STATUS_APP_CONNECTING;
         }
     }
 
     if (status == STATUS_APP_CONNECTED) {
 
+        if (current_status == STATUS_APP_AUTO) {
+            set_status_app(STATUS_APP_AUTO);
+            return;
+        }
+
         set_status_syncing();
         current_status = STATUS_APP_SYNCING;
+        return;
 
     }
 
-    if (status == STATUS_APP_SYNCRONIZED) {
-        if (get_next_schedule(&min_of_day, &min_of_trigger, &setpoint_temperature) == 0) {
-            set_status_manual();
-            set_lcd_update_button_mode_clickable(false);
-            current_status = STATUS_APP_MANUAL;
-        } else {
+    if (status == STATUS_APP_SYNCHRONIZED) {
 
-            ESP_LOGE(TAG, "Schedule :%d, %d, %.1f",min_of_day, min_of_trigger, setpoint_temperature);
-            set_status_auto(min_of_day, min_of_trigger, setpoint_temperature);
-        }
+        set_status_app(STATUS_APP_AUTO);
+        return;
     }
+    
 
     if (status == STATUS_APP_MANUAL) {
+            ESP_LOGI(TAG, "SE PIDE CAMNBIO A MANUAL");
 
         if (current_status == STATUS_APP_AUTO) {
 
+            //Si estabamos en auto, si lo ponemos en manual, si el rele estaba en ON se pone a OFF y viceversa
             set_lcd_update_schedule(false, -1, -1, -1);
+            if (gpio_get_level(CONFIG_RELAY_GPIO) == OFF) {
+                relay_operation(ON);
+            } else {
+                relay_operation(OFF);
+            }
         }
     }
+  
+    
 
+    if (status == STATUS_APP_AUTO) {
+        ESP_LOGI(TAG, "SE PIDE CAMNBIO A AUTO");
+        if (exists_shcedules(&min_of_day, &min_of_trigger, &setpoint_temperature) == false) {
+            set_status_manual();
+        } else {
 
+            set_status_auto(min_of_day, min_of_trigger, setpoint_temperature);
+        }
+        
+    }
 
+    current_status = status;
+    //falta notificar el nuevo estado a la cloud
 
 }
 
 status_app_t get_current_status_app() {
 
+    ESP_LOGW(TAG, "CURRENT STATUS VALE %s: %d", status2mnemonic(current_status), current_status);
     return current_status;
 }
 
+
+STATUS_RELAY relay_operation(STATUS_RELAY op) {
+
+	
+	if (gpio_get_level(CONFIG_RELAY_GPIO) == OFF){
+		if (op == ON) {
+			gpio_set_level(CONFIG_RELAY_GPIO, op);
+			ESP_LOGE(TAG, "Accion: OFF->ON");
+                notify_heating_gas_Boiler(op);
+		} else {
+			ESP_LOGE(TAG, "Accion: OFF->OFF");
+			}
+	} else {
+
+		if (op == ON) {
+			ESP_LOGE(TAG, "Accion: ON->ON");
+		} else {
+			gpio_set_level(CONFIG_RELAY_GPIO, op);
+			ESP_LOGE(TAG, "Accion: ON->OFF");
+            notify_heating_gas_Boiler(op);
+
+			}
+	}
+
+
+
+    //set_lcd_update_heating(op);
+    
+	return gpio_get_level(CONFIG_RELAY_GPIO);
+}
 
 
