@@ -21,7 +21,6 @@ uint8_t get_schedules_list() {
     cJSON *json;
     cJSON *schedules;
     cJSON *schedule;
-    cJSON *triggers = NULL;
     uint8_t n_triggers = 0;
 
 
@@ -104,17 +103,19 @@ static float extract_setpoint_temperature(cJSON *item) {
 
 }
 
-static uint8_t extract_trigger_data(cJSON *trigger, int *min_of_trigger, int *mask_of_trigger) {
+static esp_err_t extract_trigger_data(cJSON *trigger, int *min_of_trigger, int *mask_of_trigger, int wday) {
 
     cJSON *index = NULL;
     cJSON *obj = NULL;
-    int n_schedules = 0;
 
 
     // Obtenemos los datos del trigger
     int j, tam;
-    ESP_LOGE(TAG, "%s", cJSON_Print(trigger));
+    ESP_LOGE(TAG, "%s. dia de la semana %d", cJSON_Print(trigger), wday);
     tam = cJSON_GetArraySize(trigger);
+    if (tam > 1) {
+        ESP_LOGW(TAG, "El array trigger tiene mas de un elemento y no estamos preparados para analizarlo");
+    }
     for (j=0;j<tam;j++) {
         index = cJSON_GetArrayItem(trigger, j);
         if ((obj = cJSON_GetObjectItem(index, "m")) == NULL) {
@@ -128,11 +129,18 @@ static uint8_t extract_trigger_data(cJSON *trigger, int *min_of_trigger, int *ma
             ESP_LOGE(TAG, "Error al extraer el parametro d: %s", cJSON_Print(index));
             return ESP_FAIL;
         }
-
         *mask_of_trigger = cJSON_GetNumberValue(obj);
+
+        if (apply_mask_today(wday, *mask_of_trigger) == false) {
+            ESP_LOGE(TAG, "La mascara no mapea y este schedule no es para hoy");
+            return ESP_FAIL;
+        }
+
+
+        
     }
 
-    return n_schedules;
+    return ESP_OK;
 
 
 
@@ -152,7 +160,7 @@ static void print_schedule(bool enabled, int min_of_trigger, float setpoint_temp
 
 }
 
-
+/*
 uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_temperature) {
 
     char *param_list;
@@ -257,12 +265,12 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
             ESP_LOGW(TAG, "trigger posterior a la hora actual");
             if (candidate == -1 ) {
                 candidate = *min_of_trigger;
-                //*setpoint_temperature = extract_setpoint_temperature(item_schedule);
+
             } else {
                 if (candidate < *min_of_trigger) {
                     ESP_LOGW(TAG, "Nuevo candidato con indice %d", i);
                     candidate = *min_of_trigger;
-                    //*setpoint_temperature = extract_setpoint_temperature(item_schedule);
+
 
                 } else {
                     ESP_LOGW(TAG, "Seguimos iterando");
@@ -281,13 +289,13 @@ uint8_t get_next_schedule(int *min_of_day, int *min_of_trigger, float *setpoint_
 
 }
 
-
+*/
 static void print_schedules(int n_schedules, schedules_t *elements) {
 
     int i;
     for (i=0;i<n_schedules;i++) {
 
-        printf("schedule: %d, %d, %d, %d, %02d:%02d\n", elements[i].index,elements[i].enabled, elements[i].mask_trigger, elements[i].trigger, elements[i].trigger/60, elements[i].trigger%60);
+        printf("schedule: %d, %d, %d, %d, %02d:%02d --> %.1f\n", elements[i].index,elements[i].enabled, elements[i].mask_trigger, elements[i].trigger, elements[i].trigger/60, elements[i].trigger%60, elements[i].temperature);
     }
 }
 
@@ -302,6 +310,8 @@ int comparar_por_trigger(const void *a, const void *b) {
     if (sa->trigger > sb->trigger) return 1;
     return 0;
 }
+
+
 int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_temperature) {
 
     char *param_list;
@@ -315,6 +325,10 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
     int i;
     int mask_of_trigger = 0;
     schedules_t *elements = NULL;
+    time_t now;
+	struct tm fecha;
+    uint8_t n_programs = 0;
+
 
     
     param_list = esp_rmaker_get_node_params();
@@ -340,6 +354,11 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
         return ESP_FAIL;
     }
     n_schedules = cJSON_GetArraySize(schedules);
+    if (n_schedules == 0) {
+        ESP_LOGW(TAG, "No hay ningun schedule. pasaremos a modo manual");
+        return n_schedules;
+    }
+
     if (n_schedules > 0) {
         elements = (schedules_t*) calloc(n_schedules, sizeof(schedules_t));
         if (elements == NULL) {
@@ -347,6 +366,10 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
             return ESP_FAIL;
         }
     }
+
+    time(&now);
+    localtime_r(&now, &fecha);
+    *min_of_day = fecha.tm_hour * 60 + fecha.tm_min;
 
    //Bucle para recorrer todos los schedules
     for (i=0;i<n_schedules;i++) {
@@ -366,20 +389,74 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
             return ESP_FAIL;
         }
 
-        extract_trigger_data(trigger, min_of_trigger, &mask_of_trigger);
+        if (extract_trigger_data(trigger, min_of_trigger, &mask_of_trigger, fecha.tm_wday) == ESP_FAIL) {
+            ESP_LOGW(TAG, "El schedule no esta habilitado y no cuenta");
+            continue;
+        }
+
+
         elements[i].index = i;
         elements[i].enabled = enabled;
         elements[i].mask_trigger = mask_of_trigger;
         elements[i].trigger = *min_of_trigger;
+        elements[i].temperature = extract_setpoint_temperature(item_schedule);
+        n_programs++;
+    }
+    
+    if (n_programs == 0) {
+        ESP_LOGW(TAG, "No hay schedules activos o que mapeen con la mascara.");
+        return n_programs;
     }
 
-    print_schedules(n_schedules, elements);
-   //int n = sizeof(elements) / sizeof(elements[0]);
+    if (n_programs == 1) {
+        if (*min_of_day >= elements->trigger ) {
+            // El trigger ya ha pasado. Cogemos el setpoint temperature y el next schedule pero sería para mañana.
+            *min_of_trigger = elements->trigger;
+            *setpoint_temperature = elements->temperature;
 
-    // Ordenamos en el mismo array
-    qsort(elements, n_schedules, sizeof(schedules_t), comparar_por_trigger);
-    print_schedules(n_schedules, elements);
+        } else {
+            *min_of_trigger = elements->trigger;
+        }
+    }
 
-    return 0;
+    if (n_programs > 1) {
+        print_schedules(n_programs, elements);
+        // Ordenamos en el mismo array
+        qsort(elements, n_programs, sizeof(schedules_t), comparar_por_trigger);
+        print_schedules(n_programs, elements);
+
+        //¿Estamos al principio?
+        for (i=0;i<n_programs;i++) {
+
+            if (elements[i].trigger > *min_of_day) {
+                //item encontrado
+                if (i == 0) {
+                    //Todos los elementos son posteriores y soy el primero de la lista.
+                    //Asigno el proximo intervalo y el anterior setpoint. Es decir, el ultimo del dia anterior.
+                    //primer schedule
+                    *min_of_trigger = elements[i].trigger;
+                    //setpoint del dia anterior
+                    *setpoint_temperature = elements[n_programs].temperature;
+
+                } else {
+                    // Estoy enmedio ,asi que cojo el schedule y el anterior setpoint
+                    *min_of_trigger = elements[i].trigger;
+                    *setpoint_temperature = elements[i-1].temperature;
+                }
+                break;
+            }          
+
+            
+        }
+        // Si llegamos aqui es que es el ultimo de la lista y todos son a pasado. Cogemos el setpoint actual y el schedule de mañana, es decir, el primero de la lista.
+        *min_of_trigger = elements->trigger;
+        *setpoint_temperature = elements[i-1].temperature;
+
+    }
+
+    ESP_LOGW(TAG, " Hay %d programas activos. Los minutos del dia son %d, y el elemento es elemento es %d y el setpoint %.1f", n_programs, *min_of_day, *min_of_trigger, *setpoint_temperature);
+
+
+    return n_programs;
 
 }

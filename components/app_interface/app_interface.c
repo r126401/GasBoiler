@@ -484,9 +484,9 @@ static void set_status_auto(uint32_t min_of_day, uint32_t min_of_trigger, float 
 bool exists_shcedules(int *min_of_day, int *min_of_trigger, float *setpoint_temperature) {
 
 
-    get_data_schedules(min_of_day, min_of_trigger, setpoint_temperature);
+    //get_data_schedules(min_of_day, min_of_trigger, setpoint_temperature);
 
-    if (get_next_schedule(min_of_day, min_of_trigger, setpoint_temperature) == 0) {
+    if (get_data_schedules(min_of_day, min_of_trigger, setpoint_temperature) == 0) {
         ESP_LOGI(TAG, "mode is STATUS_APP_MANUAL");
         return false;
     } else {
