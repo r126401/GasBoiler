@@ -65,6 +65,21 @@ char* event_app_2mnemonic(EVENT_APP type) {
         case EVENT_APP_MANUAL:
             strncpy(mnemonic, "EVENT_APP_MANUAL", 30);
         break;
+        case EVENT_APP_CONNECTING:
+            strncpy(mnemonic, "EVENT_APP_AUTO", 30);
+        break;
+
+        case EVENT_APP_CONNECTED:
+            strncpy(mnemonic, "EVENT_APP_MANUAL", 30);
+        break;
+        case EVENT_APP_SYNCING:
+            strncpy(mnemonic, "EVENT_APP_AUTO", 30);
+        break;
+
+        case EVENT_APP_SYNCED:
+            strncpy(mnemonic, "EVENT_APP_MANUAL", 30);
+        break;
+
         case EVENT_APP_ALARM_OFF:
             strncpy(mnemonic, "EVENT_APP_ALARM_OFF", 30);
         break;
@@ -108,14 +123,24 @@ void receive_event_app(event_app_t event) {
             break;
 
         case EVENT_APP_MANUAL:
-            ESP_LOGI(TAG, "Recibido evento para cambiar a STATUS_APP_MANUAL");
-            set_status_app(STATUS_APP_MANUAL);
-            break;
-
+            status_app = STATUS_APP_MANUAL;
         case EVENT_APP_AUTO:
-            ESP_LOGI(TAG, "Recibido evento para cambiar a EVENT_APP_AUTO");
-            set_status_app(EVENT_APP_AUTO);
-        break;
+            status_app = STATUS_APP_AUTO;
+
+        case EVENT_APP_CONNECTING:
+            status_app = STATUS_APP_CONNECTING;
+
+        case EVENT_APP_CONNECTED:
+            status_app = STATUS_APP_CONNECTED;
+
+        case EVENT_APP_SYNCING:
+            status_app = STATUS_APP_SYNCING;
+
+        case EVENT_APP_SYNCED:
+            status_app = STATUS_APP_SYNCHRONIZED;
+            ESP_LOGW(TAG, "Evento a ser enviado :%s", status2mnemonic(status_app));
+            set_status_app(status_app);
+            break;
 
         case EVENT_APP_ALARM_OFF:
 
@@ -225,16 +250,8 @@ void send_event_app_status(EVENT_APP status)  {
 
     event_app_t event;
     event.event_app = status;
-    switch (status) {
 
-        case EVENT_APP_AUTO:
-        case EVENT_APP_MANUAL:
-        send_event_app(event);
-        break;
-        default:
-            ESP_LOGE(TAG, "No se puede llamar a esta funcion para este evento");
-        break;
-    }
+    send_event_app(event);
 }
 
 void send_event_app_factory() {

@@ -468,6 +468,7 @@ static void set_status_auto(uint32_t min_of_day, uint32_t min_of_trigger, float 
 
 
     //Se cambia la etiqueta a AUTO
+    update_time_valid(true);
     set_lcd_update_text_mode(TEXT_STATUS_APP_AUTO);
     //Se actualiza el schedule en el display
     set_lcd_update_schedule(true, min_of_day, min_of_trigger, min_of_day);

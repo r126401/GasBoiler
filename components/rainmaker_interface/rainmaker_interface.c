@@ -2,6 +2,7 @@
 
 #include "rainmaker_interface.h"
 #include "app_interface.h"
+#include "app_events.h"
 #include <string.h>
 #include <inttypes.h>
 #include <freertos/FreeRTOS.h>
@@ -250,12 +251,12 @@ void event_handler_sync (struct timeval *tv) {
 
     case SNTP_SYNC_STATUS_RESET:
         ESP_LOGW(TAG, "La sincronizacion esta en estado reset");
-        set_status_app(STATUS_APP_SYNCHRONIZED);
+        
         break;
 
     case SNTP_SYNC_STATUS_COMPLETED:
         ESP_LOGI(TAG, "La sincronizacion esta completada");
-        update_time_valid(true);
+        send_event_app_status(EVENT_APP_SYNCED);
 
         break;
 

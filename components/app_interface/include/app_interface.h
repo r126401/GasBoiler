@@ -95,3 +95,4 @@ void time_refresh(void *arg);
 void update_time_valid(bool timevalid);
 bool get_now(uint32_t *hour, uint32_t *min, uint32_t *sec);
 STATUS_RELAY relay_operation(STATUS_RELAY op);
+char* status2mnemonic(status_app_t status);
