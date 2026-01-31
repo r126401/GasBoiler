@@ -482,7 +482,10 @@ static esp_err_t message_cloud_received(const esp_rmaker_device_t *device, const
     /** Request received when a schedule has triggered */
     case ESP_RMAKER_REQ_SRC_SCHEDULE:
         ESP_LOGI(TAG, "message_cloud_received. ESP_RMAKER_REQ_SRC_SCHEDULE");
-        ESP_LOGI(TAG, "tipo : %s, valor: %.1f, %s", esp_rmaker_param_get_type(param), esp_rmaker_param_get_val(param)->val.f, (char*)priv_data);
+        ESP_LOGI(TAG, "tipo : %s, valor: %.1f", esp_rmaker_param_get_type(param), esp_rmaker_param_get_val(param)->val.f);
+        if (priv_data != NULL) {
+            ESP_LOGW(TAG, "Datos privados: %s");
+        }
        
 
 
