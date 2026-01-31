@@ -327,7 +327,7 @@ status_app_t get_status_gas_boiler() {
 
     status_app_t status;
     status = platform_get_status_gas_boiler();
-    ESP_LOGI(TAG, "El estado de la aplicacion es %d", status);
+    ESP_LOGI(TAG, "El estado de la aplicacion es %s", status2mnemonic(status));
 
     return status;
 
@@ -365,12 +365,8 @@ void factory_reset_device() {
 void notify_setpoint_temperature(float setpoint_temperature) {
 
     esp_err_t error;
-    float current_temperature;
     THERMOSTAT_ACTION action;
-
-   
-    //set_lcd_update_threshold_temperature(setpoint_temperature);
-    
+ 
     
     ESP_LOGE(TAG, "Vamos a enviar el setpoint temperature");
      error = platform_notify_setpoint_temperature(setpoint_temperature);
@@ -381,8 +377,8 @@ void notify_setpoint_temperature(float setpoint_temperature) {
 
                 ESP_LOGE(TAG, "No se ha podido enviar el setpoint temperature a la cloud");
     }
-    current_temperature = get_current_temperature();
-    thermostat_action(current_temperature);
+
+    thermostat_action(get_current_temperature());
 
 }
 
@@ -508,6 +504,12 @@ void set_status_app(status_app_t status) {
     float setpoint_temperature;
 
 
+    if (current_status == status) {
+        ESP_LOGW(TAG, "El estado actual y el nuevo son iguales: %s", status2mnemonic(status));
+        return;
+    }
+
+    ESP_LOGW(TAG, "%s -----------> %s", status2mnemonic(current_status), status2mnemonic(status));
     if ((status == STATUS_APP_UNDEFINED) || (status == STATUS_APP_STARTING)) {
         set_status_starting();
         
@@ -579,7 +581,7 @@ void set_status_app(status_app_t status) {
 
 status_app_t get_current_status_app() {
 
-    ESP_LOGW(TAG, "CURRENT STATUS VALE %s: %d", status2mnemonic(current_status), current_status);
+    ESP_LOGW(TAG, "Estado actual vale: %s", status2mnemonic(current_status));
     return current_status;
 }
 

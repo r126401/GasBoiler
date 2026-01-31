@@ -519,7 +519,7 @@ static void lv_event_handler_button_mode(lv_event_t *event) {
         
         set_button_threshold_clickable(false);
         //set_status_app(STATUS_APP_MANUAL);
-        send_event_app_status(EVENT_APP_MANUAL);
+        send_event_app_status(STATUS_APP_MANUAL);
 
 
 
@@ -528,7 +528,7 @@ static void lv_event_handler_button_mode(lv_event_t *event) {
         lv_update_label_mode("M");
         lv_update_text_mode("AUTO");
         set_button_threshold_clickable(true);
-        send_event_app_status(EVENT_APP_AUTO);
+        send_event_app_status(STATUS_APP_AUTO);
 
     }
 

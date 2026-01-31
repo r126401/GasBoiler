@@ -256,7 +256,7 @@ void event_handler_sync (struct timeval *tv) {
 
     case SNTP_SYNC_STATUS_COMPLETED:
         ESP_LOGI(TAG, "La sincronizacion esta completada");
-        send_event_app_status(EVENT_APP_SYNCED);
+        send_event_app_status(STATUS_APP_SYNCHRONIZED);
 
         break;
 

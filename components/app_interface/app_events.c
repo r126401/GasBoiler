@@ -58,39 +58,17 @@ char* event_app_2mnemonic(EVENT_APP type) {
         case EVENT_APP_TIME_VALID:
             strncpy(mnemonic, "EVENT_APP_TIME_VALID", 30);
         break;
-        case EVENT_APP_AUTO:
-            strncpy(mnemonic, "EVENT_APP_AUTO", 30);
-        break;
 
-        case EVENT_APP_MANUAL:
-            strncpy(mnemonic, "EVENT_APP_MANUAL", 30);
+        case EVENT_APP_STATUS:
+             strncpy(mnemonic, "EVENT_APP_STATUS", 30);
         break;
-        case EVENT_APP_CONNECTING:
-            strncpy(mnemonic, "EVENT_APP_AUTO", 30);
-        break;
-
-        case EVENT_APP_CONNECTED:
-            strncpy(mnemonic, "EVENT_APP_MANUAL", 30);
-        break;
-        case EVENT_APP_SYNCING:
-            strncpy(mnemonic, "EVENT_APP_AUTO", 30);
-        break;
-
-        case EVENT_APP_SYNCED:
-            strncpy(mnemonic, "EVENT_APP_MANUAL", 30);
-        break;
-
+       
         case EVENT_APP_ALARM_OFF:
             strncpy(mnemonic, "EVENT_APP_ALARM_OFF", 30);
         break;
         case EVENT_APP_ALARM_ON:
             strncpy(mnemonic, "EVENT_APP_ALARM_ON", 30);
         break;
-        case EVENT_APP_FACTORY:
-            strncpy(mnemonic, "EVENT_APP_FACTORY", 30);
-        break;
-
-
 
     }
 
@@ -111,8 +89,8 @@ void receive_event_app(event_app_t event) {
 
         case EVENT_APP_SETPOINT_THRESHOLD:
 
-            ESP_LOGI(TAG, "Recibido evento EVENT_APP_SETPOINT_THRESHOLD. Threshold = %.1f", event.value); 
-            notify_setpoint_temperature(event.value);
+            ESP_LOGI(TAG, "Recibido evento EVENT_APP_SETPOINT_THRESHOLD. Threshold = %.1f", event.value_float); 
+            notify_setpoint_temperature(event.value_float);
             //set_app_update_threshold(event.value, true);
             break;
 
@@ -122,24 +100,9 @@ void receive_event_app(event_app_t event) {
             
             break;
 
-        case EVENT_APP_MANUAL:
-            status_app = STATUS_APP_MANUAL;
-        case EVENT_APP_AUTO:
-            status_app = STATUS_APP_AUTO;
-
-        case EVENT_APP_CONNECTING:
-            status_app = STATUS_APP_CONNECTING;
-
-        case EVENT_APP_CONNECTED:
-            status_app = STATUS_APP_CONNECTED;
-
-        case EVENT_APP_SYNCING:
-            status_app = STATUS_APP_SYNCING;
-
-        case EVENT_APP_SYNCED:
-            status_app = STATUS_APP_SYNCHRONIZED;
-            ESP_LOGW(TAG, "Evento a ser enviado :%s", status2mnemonic(status_app));
-            set_status_app(status_app);
+        case EVENT_APP_STATUS:
+            ESP_LOGW(TAG, "Evento a ser enviado :%s", status2mnemonic(event.value_int));
+            set_status_app(event.value_int);
             break;
 
         case EVENT_APP_ALARM_OFF:
@@ -148,13 +111,6 @@ void receive_event_app(event_app_t event) {
         case EVENT_APP_ALARM_ON:
 
         break;
-
-        case EVENT_APP_FACTORY:
-            set_status_app(STATUS_APP_FACTORY);
-
-        break;
-
-
 
 
     }
@@ -234,7 +190,7 @@ void send_event_app_setpoint_temperature(float setpoint_temperature) {
 
     event_app_t event;
     event.event_app = EVENT_APP_SETPOINT_THRESHOLD;
-    event.value = setpoint_temperature;
+    event.value_float = setpoint_temperature;
     send_event_app(event);
 }
 
@@ -246,10 +202,11 @@ void send_event_app_time_valid() {
 
 }
 
-void send_event_app_status(EVENT_APP status)  {
+void send_event_app_status(status_app_t status)  {
 
     event_app_t event;
-    event.event_app = status;
+    event.event_app = EVENT_APP_STATUS;
+    event.value_int = status;
 
     send_event_app(event);
 }
@@ -257,7 +214,7 @@ void send_event_app_status(EVENT_APP status)  {
 void send_event_app_factory() {
 
     event_app_t event;
-    event.event_app = EVENT_APP_FACTORY;
+    event.event_app = EVENT_APP_STATUS;
     send_event_app(event);
 }
 
