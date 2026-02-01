@@ -377,8 +377,10 @@ void notify_setpoint_temperature(float setpoint_temperature) {
 
                 ESP_LOGE(TAG, "No se ha podido enviar el setpoint temperature a la cloud");
     }
+    set_lcd_update_threshold_temperature(setpoint_temperature);
 
     thermostat_action(get_current_temperature());
+    
 
 }
 

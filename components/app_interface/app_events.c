@@ -91,7 +91,7 @@ void receive_event_app(event_app_t event) {
 
             ESP_LOGI(TAG, "Recibido evento EVENT_APP_SETPOINT_THRESHOLD. Threshold = %.1f", event.value_float); 
             notify_setpoint_temperature(event.value_float);
-            //set_app_update_threshold(event.value, true);
+            
             break;
 
 
