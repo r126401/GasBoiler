@@ -9,6 +9,8 @@ typedef enum EVENT_APP {
     EVENT_APP_STATUS,
     EVENT_APP_ALARM_ON,
     EVENT_APP_ALARM_OFF,
+    EVENT_APP_CALIBRATION,
+    EVENT_APP_READ_INTERVAL
 
 }EVENT_APP;
 
@@ -24,4 +26,6 @@ typedef struct event_app_t {
 
 void create_event_app_task();
 void send_event_app_setpoint_temperature(float setpoint_temperature);
-void send_event_app_status(status_app_t status) ;
+void send_event_app_status(status_app_t status);
+void send_event_app_calibration(float correction_temperature);
+void send_event_app_read_interval(int read_interval);

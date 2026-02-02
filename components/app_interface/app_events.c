@@ -69,8 +69,16 @@ char* event_app_2mnemonic(EVENT_APP type) {
         case EVENT_APP_ALARM_ON:
             strncpy(mnemonic, "EVENT_APP_ALARM_ON", 30);
         break;
+    
+        case EVENT_APP_CALIBRATION:
+            strncpy(mnemonic, "EVENT_APP_CALIBRATION", 30);
+        break;
+        case EVENT_APP_READ_INTERVAL:
+            strncpy(mnemonic, "EVENT_APP_READ_INTERVAL", 30);
+        break;
 
     }
+
 
 
         return mnemonic;
@@ -103,6 +111,7 @@ void receive_event_app(event_app_t event) {
         case EVENT_APP_STATUS:
             ESP_LOGW(TAG, "Evento a ser enviado :%s", status2mnemonic(event.value_int));
             set_status_app(event.value_int);
+            notify_current_status_app();
             break;
 
         case EVENT_APP_ALARM_OFF:
@@ -110,6 +119,14 @@ void receive_event_app(event_app_t event) {
         break;
         case EVENT_APP_ALARM_ON:
 
+        break;
+
+        case EVENT_APP_CALIBRATION:
+        set_temperature_correction(event.value_float);
+        break;
+
+        case EVENT_APP_READ_INTERVAL:
+        set_read_interval(event.value_int);
         break;
 
 
@@ -148,7 +165,7 @@ void create_event_app_task() {
 
 
 
-	xTaskCreatePinnedToCore(event_app_task, "event_app_task", /*CONFIG_RESOURCE_EVENT_TASK*/ 1024 * 4, NULL, 0, NULL,0);
+	xTaskCreatePinnedToCore(event_app_task, "event_app_task", /*CONFIG_RESOURCE_EVENT_TASK*/ 1024 * 3, NULL, 0, NULL,1);
 	ESP_LOGW(TAG, "TAREA DE EVENTOS DE APLICACION CREADA CREADA");
 
 
@@ -218,8 +235,24 @@ void send_event_app_factory() {
     send_event_app(event);
 }
 
+void send_event_app_calibration(float correction_temperature) {
+
+    event_app_t event;
+    event.event_app = EVENT_APP_CALIBRATION;
+    event.value_float = correction_temperature;
+    send_event_app(event);
+}
 
 
+void send_event_app_read_interval(int read_interval) {
+
+    event_app_t event;
+    event.event_app = EVENT_APP_READ_INTERVAL;
+    event.value_int = read_interval;
+    send_event_app(event);
+
+
+}
 
 
 

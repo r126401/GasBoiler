@@ -53,6 +53,7 @@ esp_rmaker_device_t *gasBoiler_device;
 
 float current_setpoint_temperature = -100;
 
+
 void platform_notify_current_temperature(float current_temperature) {
 
 
@@ -113,7 +114,7 @@ int platform_get_read_interval() {
     if (param != NULL) {
         read_interval = esp_rmaker_param_get_val(param)->val.i;
     } else {
-        read_interval = DEFAULT_READ_INTERVAL;
+        read_interval = 0;
     }
 
     //ESP_LOGI(TAG, "Intervalo de lectura: %d segundos", read_interval);
@@ -170,7 +171,7 @@ float platform_get_temperature_correction() {
 
 void platform_reset_device() {
 
-    esp_rmaker_reboot(2);
+    esp_rmaker_reboot(1);
 
 }
 
@@ -224,6 +225,19 @@ esp_err_t platform_notify_heating_gas_Boiler(bool action) {
 
 }
 
+void platform_notify_current_status_app() {
+
+    esp_rmaker_param_t *param;
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_TYPE_PARAM_MODE_NAME);
+    if (param != NULL) {
+        esp_rmaker_param_update_and_report(param, esp_rmaker_str(status2mnemonic(get_current_status_app())));
+        ESP_LOGI(TAG, "Enviado a la cloud el estado %s", status2mnemonic(get_current_status_app()));
+    } else {
+        ESP_LOGE(TAG, "No se ha podido enviar a la cloud el estado");
+    }
+
+}
+
 char* platform_get_device_name() {
 
     char *name;
@@ -236,6 +250,22 @@ char* platform_get_device_name() {
         ESP_LOGE(TAG, "No se ha podido extraer el nombre del dispositivo");
         return NULL;
     }
+
+}
+
+int platform_set_read_interval(int read_interval) {
+
+    esp_rmaker_param_t *param;
+
+     param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_PARAM_READ_INTERVAL_NAME);
+    if (param != NULL) {
+        esp_rmaker_param_update_and_notify(param, esp_rmaker_int(read_interval));
+        return read_interval;
+    } else {
+        ESP_LOGE(TAG, "No se ha podido extraer el nombre del dispositivo");
+        return 0;
+    }
+
 
 }
 
@@ -453,6 +483,19 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
+void platform_set_correction_temperature(float correction_temperature) {
+
+    esp_rmaker_param_t *param;
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, CONFIG_ESP_RMAKER_PARAM_TEMPERATURE_CORRECTION_NAME);
+    if (param != NULL) {
+        esp_rmaker_param_update_and_report(param, esp_rmaker_float(correction_temperature));
+
+    } else {
+        ESP_LOGE(TAG, "No se ha podido extraer el nombre del dispositivo");
+    }
+
+
+}
 
 
 
@@ -475,9 +518,44 @@ static esp_err_t message_cloud_received(const esp_rmaker_device_t *device, const
 
     /** Request received from cloud */
     case  ESP_RMAKER_REQ_SRC_CLOUD:
-        ESP_LOGI(TAG, "message_cloud_received. ESP_RMAKER_REQ_SRC_CLOUD");
 
-    break;
+    char* name_param;
+    name_param = esp_rmaker_param_get_name(param);
+        ESP_LOGI(TAG, "message_cloud_received. ESP_RMAKER_REQ_SRC_CLOUD %s", name_param);
+        /**
+         * Receive setpoint temperature. Change threshold in order activate/deactivate thermostat
+         */
+        
+        if ((strcmp(name_param, CONFIG_ESP_RMAKER_TYPE_PARAM_SETPOINT_TEMPERATURE_NAME)) == 0) {
+            ESP_LOGI(TAG, "Received SETPOINT_TEMPERATURE from cloud ");
+            send_event_app_setpoint_temperature(val.val.f); 
+            break;
+
+        }
+        
+
+        /**
+         * @brief Construct a new if object
+         * Receive correction temperature from cloud
+         */
+        if ((strcmp(name_param, CONFIG_ESP_RMAKER_PARAM_TEMPERATURE_CORRECTION_NAME)) == 0) {
+            ESP_LOGI(TAG, "Received CALIBRATION from cloud ");
+            send_event_app_calibration(val.val.f);
+            break;
+
+        }
+        
+        if ((strcmp(name_param, CONFIG_ESP_RMAKER_PARAM_READ_INTERVAL_NAME)) == 0) {
+        ESP_LOGI(TAG, "Received READ_INTERVAL from cloud ");
+            send_event_app_read_interval(val.val.i);
+            break;
+
+        }
+        
+        break;
+
+        
+
 
     /** Request received when a schedule has triggered */
     case ESP_RMAKER_REQ_SRC_SCHEDULE:
@@ -648,7 +726,7 @@ void rainmaker_interface_init_environment() {
         ESP_RMAKER_PARAM_AC_MODE, 
         esp_rmaker_str(CONFIG_TEXT_STATUS_APP_STARTING),
         PROP_FLAG_READ);
-        esp_rmaker_param_add_valid_str_list(param, list_mode, 7);
+        esp_rmaker_param_add_ui_type(param, ESP_RMAKER_UI_TEXT);
         esp_rmaker_device_add_param(gasBoiler_device, param);
 
     /* Setpoint TEMP CORRECTION*/

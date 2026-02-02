@@ -33,6 +33,8 @@ static const char *TAG = "app_interface.c";
 extern float current_threshold;
 extern EventGroupHandle_t evt_between_task;
 status_app_t current_status;
+float current_correction_temperature = -3.5;
+int current_read_interval = 60;
 
 
 
@@ -304,6 +306,12 @@ float get_setpoint_temperature() {
 
 }
 
+void notify_current_status_app() {
+
+    platform_notify_current_status_app();
+
+
+}
 
 
 void notify_sensor_fail() {
@@ -317,9 +325,26 @@ void notify_sensor_fail() {
 int get_read_interval() {
 
     int read_interval;
-    read_interval = platform_get_read_interval();
+    if ((read_interval = platform_get_read_interval()) > 0) {
+        current_read_interval = read_interval;
+        
+    } else {
+        ESP_LOGW(TAG, "Error al leer el read interval desde la cloud y se asigna por defecto");
+    }
     ESP_LOGI(TAG, "Intervalo de lectura: %d segundos", read_interval);
-    return read_interval;
+    return current_read_interval;
+}
+
+float get_temperature_correction() {
+
+    float correction_temperature = current_correction_temperature;
+    if ((correction_temperature = platform_get_temperature_correction()) == -100) {
+        ESP_LOGW(TAG, "No se pude extraer la calibracion desde la cloud y se asigna el actual");
+    } else {
+        current_correction_temperature = correction_temperature;
+    }
+    ESP_LOGI(TAG, "La calibracion de temperatura es de %.1f", current_correction_temperature);
+    return current_correction_temperature;
 }
 
 
@@ -341,16 +366,7 @@ float get_current_temperature() {
     return temperature;
 
 }
-float get_temperature_correction() {
-    
-    float temperature_correction;
 
-    temperature_correction = platform_get_temperature_correction();
-    ESP_LOGI(TAG, "Calibracion de la temperatura en %.1f grados", temperature_correction);
-    return temperature_correction;
-
-
-}
 
 void reset_device() {
 
@@ -459,6 +475,23 @@ static void set_status_manual() {
 
     set_lcd_update_text_mode(TEXT_STATUS_APP_MANUAL);
     set_lcd_update_button_mode_clickable(false);
+
+}
+
+void set_temperature_correction(float correction_temperature) {
+
+    current_correction_temperature = correction_temperature;
+
+    platform_set_correction_temperature(correction_temperature);
+
+
+}
+
+void set_read_interval(int read_interval) {
+
+    current_read_interval = read_interval;
+    platform_set_read_interval(read_interval);
+
 
 }
 

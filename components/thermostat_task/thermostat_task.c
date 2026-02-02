@@ -302,9 +302,9 @@ void task_iotThermostat()
 	relay_operation(OFF);
 	init_ds18b20();
     ESP_LOGI(TAG, "COMIENZA LA TAREA DE LECTURA DE TEMPERATURA");
-    read_interval = get_read_interval();
     while(1) {
         ESP_LOGW(TAG, "Leemos temperatura en local");
+        read_interval = get_read_interval();
         error = reading_local_temperature(&current_temperature);
         if (error == ESP_OK) {
 

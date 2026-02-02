@@ -22,3 +22,6 @@ esp_err_t platform_notify_setpoint_temperature(float setpoint_temperature);
 esp_err_t platform_notify_heating_gas_Boiler(bool action);
 char* platform_get_device_name();
 uint8_t get_schedules_list();
+void platform_notify_current_status_app();
+void platform_set_correction_temperature(float correction_temperature);
+int platform_set_read_interval(int read_interval);
