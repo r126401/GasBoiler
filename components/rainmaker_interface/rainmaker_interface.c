@@ -344,20 +344,19 @@ static void event_handler_wifi(void* arg, esp_event_base_t event_base, int32_t e
     case IP_EVENT_STA_GOT_IP:
     case IP_EVENT_ETH_GOT_IP:
         ESP_LOGE(TAG, "Se ha obtenido direccion ip y estamos conectados a internet. Event id: %d", event_id);
-        set_status_app(STATUS_APP_CONNECTED);
+        send_event_app_wifi_status(event_id);
         
         break;
     
     case IP_EVENT_STA_LOST_IP:
     case IP_EVENT_ETH_LOST_IP:
         ESP_LOGE(TAG, "Se ha perdido la señal wifi. Event id: %d", event_id);
-        notify_wifi_status(false);
-        notify_mqtt_status(false);
+        send_event_app_wifi_status(event_id);
 
         break;
     case 43:
         ESP_LOGE(TAG, "Status 43 recibido que aun no sabemos lo que es");
-        set_status_app(STATUS_APP_CONNECTING);
+        send_event_app_wifi_status(event_id);
         break;
     
     default:
@@ -383,7 +382,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                 break;
             case RMAKER_EVENT_CLAIM_STARTED:
                 ESP_LOGI(TAG, "event_handler_RainMaker Claim Started.");
-                set_status_app(STATUS_APP_CONNECTING);
+                send_event_app_status(STATUS_APP_CONNECTING);
                 break;
             case RMAKER_EVENT_CLAIM_SUCCESSFUL:
                 ESP_LOGI(TAG, "event_handler_RainMaker Claim Successful.");
@@ -413,15 +412,18 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                 break;
             case RMAKER_MQTT_EVENT_CONNECTED:
                 ESP_LOGI(TAG, "event_handler_MQTT Connected.");
-                notify_mqtt_status(true);
+                send_event_app_broker_status(true);
+                /*
+                set_mqtt_status(true);
                 char *id_node = esp_rmaker_get_node_id();
                 char topic[80] = {0};
                 sprintf(topic, "node/%s/params/remote", id_node);
                 esp_err_t error = esp_rmaker_mqtt_subscribe(topic, topic_cb, 0, NULL);
+                */
                 break;
             case RMAKER_MQTT_EVENT_DISCONNECTED:
                 ESP_LOGI(TAG, "event_handler_MQTT Disconnected.");
-                notify_mqtt_status(false);
+                send_event_app_broker_status(false);
                 break;
             case RMAKER_MQTT_EVENT_PUBLISHED:
                 ESP_LOGI(TAG, "event_handler_MQTT Published. Msg id: %d.", *((int *)event_data));
@@ -438,7 +440,8 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                     text_qrcode = (char*) calloc(strlen(event_data) + 1, sizeof(char));
                 }
                 strncpy(text_qrcode, event_data, strlen(event_data));
-                notify_status_factory(text_qrcode);
+                send_event_app_qr_display(text_qrcode);
+                //notify_status_factory(text_qrcode);
                 //falta liberar la memoria te text_qrcode cuando se acabe de provisionar
                 break;
             case APP_NETWORK_EVENT_PROV_TIMEOUT:
@@ -676,14 +679,6 @@ void rainmaker_interface_init_environment() {
     //assign_primary_param(param);
     esp_rmaker_device_add_param(gasBoiler_device, param);
 
-    /* power*/
-
-   // param = esp_rmaker_power_param_create(ESP_RMAKER_DEF_POWER_NAME, false);
-    //assign_primary_param(param);
-    //esp_rmaker_device_add_param(gasBoiler_device, param);
-    //esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
-
-
 
     /* temperature*/
     param = esp_rmaker_param_create(
@@ -711,9 +706,10 @@ void rainmaker_interface_init_environment() {
     /* heating*/
     param = esp_rmaker_param_create(
         CONFIG_ESP_RMAKER_PARAM_HEATING_NAME,
-        CONFIG_ESP_RMAKER_PARAM_HEATING,
+        //CONFIG_ESP_RMAKER_PARAM_HEATING,
+        "esp.param.power",
         esp_rmaker_bool(false),
-        PROP_FLAG_READ);
+        PROP_FLAG_READ | PROP_FLAG_WRITE);
         esp_rmaker_param_add_ui_type(param, ESP_RMAKER_UI_TOGGLE);
         //esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
         esp_rmaker_device_add_param(gasBoiler_device, param);

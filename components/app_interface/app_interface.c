@@ -39,21 +39,53 @@ int current_read_interval = 60;
 
 
 
-void notify_wifi_status(bool status) {
+void set_wifi_status(int status) {
 
     ESP_LOGI(TAG, "Status wifi: %d", status);
-    set_lcd_update_wifi_status(status);
-    if (status == false) {
-        set_lcd_update_broker_status(false);
+
+    switch (status) {
+
+        case 0:
+        case 4:
+            ESP_LOGE(TAG, "Se ha obtenido direccion ip y estamos conectados a internet. Event id: %d", status);
+            set_lcd_update_wifi_status(true);
+            if (get_current_status_app(STATUS_APP_CONNECTING)) {
+                set_status_app(STATUS_APP_CONNECTED);
+            }
+        break;
+
+        case 1:
+        case 5:
+            ESP_LOGE(TAG, "Se ha perdido la señal wifi. Event id: %d", status);
+            set_lcd_update_broker_status(false);
+            if (get_current_status_app() == STATUS_APP_FACTORY) {
+                ESP_LOGW(TAG, "Provisionando el dispositivo");
+            set_status_app(STATUS_APP_PROVISIONING);
+        }
+        break;
+
+        case 43:
+            if (get_current_status_app() == STATUS_APP_PROVISIONING) {
+
+                ESP_LOGW(TAG, "Credenciales enviadas al dispositivo");
+                set_status_app(STATUS_APP_CONNECTING);
+            }
+            break;
+
     }
+
+   
 
 
 }
 
-void notify_mqtt_status(bool status) {
+void set_mqtt_status(bool status) {
 
     ESP_LOGI(TAG, "Status mqtt: %d", status);
     set_lcd_update_broker_status(status);
+    if (status == true) {
+        set_lcd_update_wifi_status(true);
+    }
 
 }
 
@@ -265,6 +297,10 @@ char* status2mnemonic(status_app_t status) {
         case STATUS_APP_UPGRADING:
            strncpy(mnemonic, TEXT_STATUS_APP_UPGRADING, 30);
 
+        break;
+
+        case STATUS_APP_PROVISIONING:
+            strncpy(mnemonic, TEXT_STATUS_APP_PROVISIONING, 30);
         break;
 
         default:
@@ -499,7 +535,7 @@ static void set_status_auto(uint32_t min_of_day, uint32_t min_of_trigger, float 
 
 
     //Se cambia la etiqueta a AUTO
-    update_time_valid(true);
+    //update_time_valid(true);
     set_lcd_update_text_mode(TEXT_STATUS_APP_AUTO);
     //Se actualiza el schedule en el display
     set_lcd_update_schedule(true, min_of_day, min_of_trigger, min_of_day);
@@ -547,15 +583,25 @@ void set_status_app(status_app_t status) {
     ESP_LOGW(TAG, "%s -----------> %s", status2mnemonic(current_status), status2mnemonic(status));
     if ((status == STATUS_APP_UNDEFINED) || (status == STATUS_APP_STARTING)) {
         set_status_starting();
-        
+        current_status = status;
+        return;
     }
 
     if (status == STATUS_APP_FACTORY) {
+        set_status_factory();
         current_status = status;
+        return;
+
+    }
+
+    if (status == STATUS_APP_PROVISIONING) {
+        set_lcd_update_text_mode(TEXT_STATUS_APP_PROVISIONING);
+        current_status = status;
+        return;
     }
 
     if (status == STATUS_APP_CONNECTING) {
-        if (current_status == STATUS_APP_FACTORY) {
+        if (current_status == STATUS_APP_PROVISIONING) {
             //Hemos acabado el registro y vamos a conectarnos.
             set_status_connecting();
         }
@@ -575,6 +621,8 @@ void set_status_app(status_app_t status) {
     }
 
     if (status == STATUS_APP_SYNCHRONIZED) {
+
+        update_time_valid(true);
 
         set_status_app(STATUS_APP_AUTO);
         return;

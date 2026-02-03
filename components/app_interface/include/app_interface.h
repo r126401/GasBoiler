@@ -39,6 +39,7 @@
 #define TEXT_STATUS_APP_SYNCING "SINCRONIZANDO"
 #define TEXT_STATUS_APP_UPGRADING "ACTUALIZANDO"
 #define TEXT_STATUS_APP_UNDEFINED "UNDEFINED"
+#define TEXT_STATUS_APP_PROVISIONING "REGISTRANDO"
 
 #define EVT_RGB_TASK (1 << 0)
 #define EVT_EVENT_TASK (1 << 1)
@@ -49,6 +50,7 @@
 typedef enum status_app_t {
 
    STATUS_APP_FACTORY,
+   STATUS_APP_PROVISIONING,
    STATUS_APP_ERROR,
    STATUS_APP_AUTO,
    STATUS_APP_MANUAL,
@@ -92,10 +94,11 @@ void print_qr_register(char* register_data);
 void set_status_app(status_app_t status);
 void set_temperature_correction(float correction_temperature);
 void notify_device_started();
-void notify_wifi_status(bool status);
-void notify_mqtt_status(bool status);
+void set_wifi_status(int status);
+void set_mqtt_status(bool status);
 void time_refresh(void *arg);
 void update_time_valid(bool timevalid);
 bool get_now(uint32_t *hour, uint32_t *min, uint32_t *sec);
 STATUS_RELAY relay_operation(STATUS_RELAY op);
 char* status2mnemonic(status_app_t status);
+

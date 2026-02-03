@@ -50,7 +50,18 @@ char* event_app_2mnemonic(EVENT_APP type) {
     static char mnemonic[30];
     switch (type) 
     {
+        case EVENT_APP_WIFI:
+            strncpy(mnemonic, "EVENT_APP_WIFI", 30);
+        break;
 
+        case EVENT_APP_BROKER:
+            strncpy(mnemonic, "EVENT_APP_BROKER", 30);
+        break;
+
+        case EVENT_APP_OTA:
+             strncpy(mnemonic, "EVENT_APP_OTA", 30);
+        break;
+  
         case EVENT_APP_SETPOINT_THRESHOLD:
             strncpy(mnemonic, "EVENT_APP_SETPOINT_THRESHOLD", 30);
         break;
@@ -76,6 +87,9 @@ char* event_app_2mnemonic(EVENT_APP type) {
         case EVENT_APP_READ_INTERVAL:
             strncpy(mnemonic, "EVENT_APP_READ_INTERVAL", 30);
         break;
+        case EVENT_APP_QR_DISPLAY:
+            strncpy(mnemonic, "EVENT_APP_QR_DISPLAY", 30);
+        break;
 
     }
 
@@ -94,6 +108,18 @@ void receive_event_app(event_app_t event) {
 
     switch (event.event_app) 
     {
+        case EVENT_APP_BROKER:
+            set_mqtt_status(event.value_bool);
+            break;
+
+
+        case EVENT_APP_WIFI:
+
+            set_wifi_status(event.value_int);
+            break;
+
+        case EVENT_APP_OTA:
+        break;
 
         case EVENT_APP_SETPOINT_THRESHOLD:
 
@@ -106,6 +132,12 @@ void receive_event_app(event_app_t event) {
         case EVENT_APP_TIME_VALID:
 
             
+            break;
+        case EVENT_APP_QR_DISPLAY:
+
+            notify_status_factory(event.value_char);
+            //set_status_app(STATUS_APP_PROVISIONING);
+
             break;
 
         case EVENT_APP_STATUS:
@@ -252,6 +284,32 @@ void send_event_app_read_interval(int read_interval) {
     send_event_app(event);
 
 
+}
+
+void send_event_app_wifi_status(int status) {
+
+    event_app_t event;
+    event.event_app = EVENT_APP_WIFI;
+    event.value_int = status;
+    send_event_app(event);
+}
+
+void send_event_app_broker_status(bool status) {
+
+    event_app_t event;
+    event.event_app = EVENT_APP_BROKER;
+    event.value_bool = status;
+    send_event_app(event);    
+
+
+}
+
+void send_event_app_qr_display(char *qrcode) {
+
+    event_app_t event;
+    event.event_app = EVENT_APP_QR_DISPLAY;
+    event.value_char = qrcode;
+    send_event_app(event);
 }
 
 
