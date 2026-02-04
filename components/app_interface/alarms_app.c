@@ -2,7 +2,7 @@
 
 #include "alarms_app.h"
 #include "esp_log.h"
-#include "events_app.h"
+#include "app_events.h"
 
 static char* TAG = "alarmas.c";
 
