@@ -15,6 +15,7 @@
 #include "esp_timer.h"
 #include "esp_sntp.h"
 #include "driver/gpio.h"
+#include "cJSON.h"
 
 
 #include <string.h>
