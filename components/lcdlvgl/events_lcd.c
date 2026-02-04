@@ -11,6 +11,7 @@
 #include "lv_main.h"
 
 
+
 static char *TAG = "events_lcd.c";
 extern xQueueHandle event_queue;
 
@@ -219,7 +220,6 @@ static void receive_lcd_event(event_lcd_t event) {
         break;
 
         case QR_REGISTER:
-
         lv_paint_qr_code(event.text);
         break;
 

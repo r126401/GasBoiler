@@ -502,6 +502,8 @@ static void set_status_connecting() {
 
 static void set_status_syncing() {
 
+
+
     set_lcd_update_text_mode(TEXT_STATUS_APP_SYNCING);
 
 
@@ -568,6 +570,7 @@ bool exists_shcedules(int *min_of_day, int *min_of_trigger, float *setpoint_temp
 
 
 
+
 void set_status_app(status_app_t status) {
 
     int min_of_day;
@@ -609,24 +612,34 @@ void set_status_app(status_app_t status) {
 
     if (status == STATUS_APP_CONNECTED) {
 
-        if (current_status == STATUS_APP_AUTO) {
+        if ((current_status == STATUS_APP_AUTO) || (current_status == STATUS_APP_MANUAL)) {
             set_status_app(STATUS_APP_AUTO);
             return;
+        } else {
+            set_status_syncing();
+            current_status = STATUS_APP_SYNCING;
+            return;
         }
-
-        set_status_syncing();
-        current_status = STATUS_APP_SYNCING;
-        return;
+        
 
     }
 
     if (status == STATUS_APP_SYNCHRONIZED) {
 
         update_time_valid(true);
+        if (exists_shcedules(&min_of_day, &min_of_trigger, &setpoint_temperature) == false) {
+            set_status_manual();
+            current_status = STATUS_APP_MANUAL;
+        } else {
 
-        set_status_app(STATUS_APP_AUTO);
+            set_status_auto(min_of_day, min_of_trigger, setpoint_temperature);
+            current_status = STATUS_APP_AUTO;
+        }
         return;
+        
     }
+
+    
     
 
     if (status == STATUS_APP_MANUAL) {

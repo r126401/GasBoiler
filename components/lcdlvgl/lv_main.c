@@ -19,6 +19,7 @@
 #include "esp_log.h"
 #include "app_interface.h"
 #include "app_events.h"
+#include "cJSON.h"
 
 
 static char *TAG = "lv_main.c";
@@ -61,6 +62,8 @@ lv_obj_t *progress_schedule;
 
 lv_timer_t *timer_time;
 lv_timer_t *mytimer;
+
+lv_obj_t *lv_label_provisioning;
 
 
 //styles
@@ -765,9 +768,6 @@ if (qr_code == NULL) {
     qr_code = lv_qrcode_create(screen_main_thermostat);
 }
 
-
-
-
 lv_qrcode_set_size(qr_code, qr_size);
 lv_obj_set_pos(qr_code, 5,160);
 
@@ -779,6 +779,22 @@ ESP_LOGI(TAG, "qrcode:%s", qrcode_text);
 
 // Actualizar el QR code con el contenido
 lv_qrcode_update(qr_code, qrcode_text, strlen(qrcode_text));
+
+
+cJSON *obj;
+obj = cJSON_Parse(qrcode_text);
+if (obj != NULL) {
+    lv_label_provisioning = lv_label_create(screen_main_thermostat);
+    lv_obj_align_to(lv_label_provisioning, qr_code, LV_ALIGN_OUT_RIGHT_BOTTOM, 10,0);
+    //cJSON_GetStringValue(cJSON_GetObjectItem(obj, "name"));
+    //cJSON_GetStringValue(cJSON_GetObjectItem(obj, "pop"));
+    lv_label_set_text_fmt(lv_label_provisioning, "dispositivo: %s\npin: %s", cJSON_GetStringValue(cJSON_GetObjectItem(obj, "name")), cJSON_GetStringValue(cJSON_GetObjectItem(obj, "pop")));
+    cJSON_Delete(obj);
+
+}
+
+
+
 lv_obj_invalidate(qr_code);
 
 
@@ -792,11 +808,16 @@ void lv_update_device_name(char *device_name) {
 
 void lv_update_hide_qr_code(bool action) {
 
+
+    lv_obj_del(qr_code);
+    lv_obj_del(lv_label_provisioning);
+    /*
     if (action) {
         lv_obj_add_flag(qr_code, LV_OBJ_FLAG_HIDDEN);
     } else {
         lv_obj_remove_flag(qr_code, LV_OBJ_FLAG_HIDDEN);
     }
+        */
 }
 
 
