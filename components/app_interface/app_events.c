@@ -90,6 +90,12 @@ char* event_app_2mnemonic(EVENT_APP type) {
         case EVENT_APP_QR_DISPLAY:
             strncpy(mnemonic, "EVENT_APP_QR_DISPLAY", 30);
         break;
+        case EVENT_APP_UPDATE_SCHEDULE:
+            strncpy(mnemonic, "EVENT_APP_UPDATE_SCHEDULE", 30);
+        break;
+        case EVENT_APP_START_SCHEDULE:
+            strncpy(mnemonic, "EVENT_APP_START_SCHEDULE", 30);
+        break;
 
     }
 
@@ -159,6 +165,16 @@ void receive_event_app(event_app_t event) {
 
         case EVENT_APP_READ_INTERVAL:
         set_read_interval(event.value_int);
+        break;
+
+        case EVENT_APP_UPDATE_SCHEDULE:
+        notify_update_schedule();
+
+        break;
+
+        case EVENT_APP_START_SCHEDULE:
+            notify_start_schedule(event.value_float);
+
         break;
 
 
@@ -309,6 +325,21 @@ void send_event_app_qr_display(char *qrcode) {
     event_app_t event;
     event.event_app = EVENT_APP_QR_DISPLAY;
     event.value_char = qrcode;
+    send_event_app(event);
+}
+
+void send_event_app_update_schedule() {
+
+    event_app_t event;
+    event.event_app = EVENT_APP_UPDATE_SCHEDULE;
+    send_event_app(event);
+}
+
+void send_event_app_start_schedule(float setpoint_temperature) {
+
+    event_app_t event;
+    event.event_app = EVENT_APP_START_SCHEDULE;
+    event.value_float = setpoint_temperature;
     send_event_app(event);
 }
 

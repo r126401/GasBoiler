@@ -825,7 +825,6 @@ void lv_update_schedule(bool show, int min, int max, int index) {
 
     int hour;
     int minute;
-    int progress;
 
     if ((show == true) && (min == -1) && (max == -1)) {
 
@@ -833,17 +832,20 @@ void lv_update_schedule(bool show, int min, int max, int index) {
         index = lv_bar_get_value(progress_schedule);
         index++;
         lv_bar_set_value(progress_schedule, index, LV_ANIM_OFF);
-        ESP_LOGI(TAG, "Progress ahora vale %d", index);
+        
+        ESP_LOGI(TAG, "min: %d, max: %d, index: %d", lv_bar_get_min_value(progress_schedule), lv_bar_get_max_value(progress_schedule), index);
         return;
 
     }
 
-    lv_bar_set_range(progress_schedule, min, max);
+    
     if (!show) {
         lv_obj_add_flag(layout_schedule, LV_OBJ_FLAG_HIDDEN);
         return;
     }
     lv_obj_remove_flag(layout_schedule, LV_OBJ_FLAG_HIDDEN);
+    
+
 
     hour = min/60;
     minute = min%60;
@@ -851,6 +853,7 @@ void lv_update_schedule(bool show, int min, int max, int index) {
     hour = max/60;
     minute = max%60;
     if (min > max) {
+        max = (1440 - min) + max;
         lv_label_set_text_fmt(text_to_schedule, "%02d:%02d*", hour, minute);
     } else {
         lv_label_set_text_fmt(text_to_schedule, "%02d:%02d", hour, minute);
@@ -858,11 +861,11 @@ void lv_update_schedule(bool show, int min, int max, int index) {
     }
     
 
-    progress = (index - min) * 100 / (max - min);
+    lv_bar_set_range(progress_schedule, min, max);
 
-    ESP_LOGI(TAG, "min: %d, max: %d, index: %d, progress: %d", min, max, index, progress);
+    ESP_LOGI(TAG, "min: %d, max: %d, index: %d", min, max, index);
 
-    lv_bar_set_value(progress_schedule, progress, LV_ANIM_OFF);
+    lv_bar_set_value(progress_schedule, index, LV_ANIM_OFF);
 
 
 

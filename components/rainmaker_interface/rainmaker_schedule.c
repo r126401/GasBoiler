@@ -309,13 +309,18 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
                     *min_of_trigger = elements[i].trigger;
                     //setpoint del dia anterior
                     *setpoint_temperature = elements[n_programs].temperature;
-
+                    ESP_LOGW(TAG, "Soy el %d elemento, trigger %d > min_of day %d. setpoint :%.1f", i, elements[i].trigger, *min_of_day, *setpoint_temperature);
                 } else {
-                    // Estoy enmedio ,asi que cojo el schedule y el anterior setpoint
+                    ESP_LOGW(TAG, "No es el elemento 0");
                     *min_of_trigger = elements[i].trigger;
                     *setpoint_temperature = elements[i-1].temperature;
+                    ESP_LOGW(TAG, "Encontrado y retornamos. Soy el %d elemento, trigger %d > min_of day %d. setpoint :%.1f", i, elements[i].trigger, *min_of_day, *setpoint_temperature);
+                    return n_programs;
                 }
-                break;
+
+            } else {
+                ESP_LOGW(TAG, "seguimos iterando desde el %d al %d", i, i+1);
+                
             }          
 
             

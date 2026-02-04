@@ -15,7 +15,7 @@
 #include "esp_timer.h"
 #include "esp_sntp.h"
 #include "driver/gpio.h"
-#include "cJSON.h"
+
 
 
 #include <string.h>
@@ -80,38 +80,7 @@ void set_wifi_status(int status) {
 
 }
 
-static void topic_cb (const char *topic, void *payload, size_t payload_len, void *priv_data) {
 
-    cJSON *json;
-    cJSON *schedules;
-
-    
-    json = cJSON_Parse((char*) payload);
-
-    if (json == NULL) {
-        ESP_LOGW(TAG, "El payload recibido no es json");
-        return;
-    }
-
-    schedules = cJSON_GetObjectItem(json, "Schedule");
-    if (schedules != NULL) {
-
-        ESP_LOGW(TAG, "Se ha encontrado una operacion de schedules");
-        //esp_timer_create(&update_lcd_schedules_shot_timer_args, &timer_update_lcd);
-        //esp_timer_start_once(timer_update_lcd, 1000000);
-    } else {
-        ESP_LOGE(TAG, "No Se ha encontrado una operacion de schedules");
-    }
-    
-
-
-    /**
-     * Es necesario extraer la info para refrescar el schedule de la pantalla.
-     * {"Schedule":{"Schedules":[{"id":"GO41","operation":"enable"}]}}
-     */
-
-    ESP_LOGE(TAG, "Se ha recibido informacion: %.*s", payload_len, (char*) payload);
-}
 
 void set_mqtt_status(bool status) {
 
@@ -120,13 +89,8 @@ void set_mqtt_status(bool status) {
     if (status == true) {
         set_lcd_update_wifi_status(true);
     }
-    char *id_node = esp_rmaker_get_node_id();
-    char topic[80] = {0};
-    sprintf(topic, "node/%s/params/remote", id_node);
-    esp_err_t error = esp_rmaker_mqtt_subscribe(topic, topic_cb, 0, NULL);
 
-
-
+    subscribe_remote_events();
 
 
 }
@@ -400,6 +364,68 @@ void notify_sensor_fail() {
 }
 
 
+static bool exists_shcedules(int *min_of_day, int *min_of_trigger, float *setpoint_temperature) {
+
+
+    //get_data_schedules(min_of_day, min_of_trigger, setpoint_temperature);
+
+    if (get_data_schedules(min_of_day, min_of_trigger, setpoint_temperature) == 0) {
+        ESP_LOGI(TAG, "No hay schedules activos");
+        return false;
+    } else {
+
+        ESP_LOGE(TAG, "Hay schedules activos, Schedule :%d, %d, %.1f",*min_of_day, *min_of_trigger, *setpoint_temperature);
+        return true;
+    }
+}
+
+void notify_update_schedule() {
+
+    int min_of_day;
+    int min_of_trigger;
+    float setpoint_temperature;
+
+    ESP_LOGI(TAG, "Se ha modificado un schedule. Estado :%s", status2mnemonic(get_current_status_app()));
+    if (exists_shcedules(&min_of_day, &min_of_trigger, &setpoint_temperature) == false) {
+        ESP_LOGE(TAG, "Error: Deberia haber al menos un schedule, lo han inhibido o han borrado el ultimo");
+        if (get_current_status_app() == STATUS_APP_AUTO) {
+            ESP_LOGI(TAG, "Vamos a poner el modo manual despues de modificar el schedule");
+            set_status_app(STATUS_APP_MANUAL);
+        } else {
+            ESP_LOGI(TAG, "No estabamos en modo auto y como no hay schedules no hacemos nada. Estado %s", status2mnemonic(get_current_status_app()));
+        }
+    } else {
+        if ((get_current_status_app() == STATUS_APP_AUTO) || (get_current_status_app() == STATUS_APP_MANUAL)) {
+            ESP_LOGE(TAG, "Vamos a colocar el termostato en modo auto. Estado %s", status2mnemonic(get_current_status_app()));
+            set_status_app(STATUS_APP_AUTO);
+        } else {
+            ESP_LOGE(TAG, "El estado es erroneo, y es %s", status2mnemonic(get_current_status_app()));
+        }
+
+    }
+    
+    
+}
+
+void notify_start_schedule(float setpoint_temperature) {
+
+
+    int min_of_day;
+    int min_of_trigger;
+    float setpoint;
+
+    if (get_data_schedules(&min_of_day, &min_of_trigger, &setpoint) <= 0) {
+        ESP_LOGE(TAG, "Error: deberia haber schedules");
+        return;
+    }
+
+    notify_setpoint_temperature(setpoint_temperature);
+    set_lcd_update_schedule(true, min_of_day, min_of_trigger, min_of_day);
+
+
+}
+
+
 int get_read_interval() {
 
     int read_interval;
@@ -593,20 +619,7 @@ static void set_status_auto(uint32_t min_of_day, uint32_t min_of_trigger, float 
 
 }
 
-bool exists_shcedules(int *min_of_day, int *min_of_trigger, float *setpoint_temperature) {
 
-
-    //get_data_schedules(min_of_day, min_of_trigger, setpoint_temperature);
-
-    if (get_data_schedules(min_of_day, min_of_trigger, setpoint_temperature) == 0) {
-        ESP_LOGI(TAG, "mode is STATUS_APP_MANUAL");
-        return false;
-    } else {
-
-        ESP_LOGE(TAG, "mode is STATUS_APP_AUTO, Schedule :%d, %d, %.1f",*min_of_day, *min_of_trigger, *setpoint_temperature);
-        return true;
-    }
-}
 
 
 
@@ -622,7 +635,7 @@ void set_status_app(status_app_t status) {
 
     if (current_status == status) {
         ESP_LOGW(TAG, "El estado actual y el nuevo son iguales: %s", status2mnemonic(status));
-        return;
+        //return;
     }
 
     ESP_LOGW(TAG, "%s -----------> %s", status2mnemonic(current_status), status2mnemonic(status));
@@ -649,6 +662,8 @@ void set_status_app(status_app_t status) {
         if (current_status == STATUS_APP_PROVISIONING) {
             //Hemos acabado el registro y vamos a conectarnos.
             set_status_connecting();
+            current_status = STATUS_APP_CONNECTING;
+            return;
         }
     }
 
@@ -696,7 +711,11 @@ void set_status_app(status_app_t status) {
             } else {
                 relay_operation(OFF);
             }
+            set_lcd_update_text_mode(TEXT_STATUS_APP_MANUAL);
         }
+        
+        current_status = status;
+        return;
     }
   
     
@@ -708,11 +727,13 @@ void set_status_app(status_app_t status) {
         } else {
 
             set_status_auto(min_of_day, min_of_trigger, setpoint_temperature);
+            current_status = status;
         }
+        return;
         
     }
 
-    current_status = status;
+    //current_status = status;
     //falta notificar el nuevo estado a la cloud
 
 }

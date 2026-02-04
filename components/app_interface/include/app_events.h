@@ -13,7 +13,9 @@ typedef enum EVENT_APP {
     EVENT_APP_ALARM_OFF,
     EVENT_APP_CALIBRATION,
     EVENT_APP_READ_INTERVAL,
-    EVENT_APP_QR_DISPLAY
+    EVENT_APP_QR_DISPLAY,
+    EVENT_APP_UPDATE_SCHEDULE,
+    EVENT_APP_START_SCHEDULE
 
 }EVENT_APP;
 
@@ -36,3 +38,5 @@ void send_event_app_read_interval(int read_interval);
 void send_event_app_wifi_status(int status);
 void send_event_app_broker_status(bool status);
 void send_event_app_qr_display(char *qrcode);
+void send_event_app_update_schedule();
+void send_event_app_start_schedule(float setpoint_temperature);

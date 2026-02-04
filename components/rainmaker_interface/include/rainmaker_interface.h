@@ -25,3 +25,4 @@ uint8_t get_schedules_list();
 void platform_notify_current_status_app();
 void platform_set_correction_temperature(float correction_temperature);
 int platform_set_read_interval(int read_interval);
+esp_err_t subscribe_remote_events();

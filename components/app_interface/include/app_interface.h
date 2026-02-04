@@ -90,6 +90,8 @@ void notify_setpoint_temperature(float setpoint_temperature);
 void notify_heating_gas_Boiler(bool action) ;
 void notify_status_factory(char* data_register);
 void notify_current_status_app();
+void notify_update_schedule();
+void notify_start_schedule(float setpoint_temperature);
 void print_qr_register(char* register_data);
 void set_status_app(status_app_t status);
 void set_temperature_correction(float correction_temperature);
