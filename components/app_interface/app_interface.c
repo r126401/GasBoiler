@@ -79,6 +79,39 @@ void set_wifi_status(int status) {
 
 }
 
+static void topic_cb (const char *topic, void *payload, size_t payload_len, void *priv_data) {
+
+    cJSON *json;
+    cJSON *schedules;
+
+    
+    json = cJSON_Parse((char*) payload);
+
+    if (json == NULL) {
+        ESP_LOGW(TAG, "El payload recibido no es json");
+        return;
+    }
+
+    schedules = cJSON_GetObjectItem(json, "Schedule");
+    if (schedules != NULL) {
+
+        ESP_LOGW(TAG, "Se ha encontrado una operacion de schedules");
+        //esp_timer_create(&update_lcd_schedules_shot_timer_args, &timer_update_lcd);
+        //esp_timer_start_once(timer_update_lcd, 1000000);
+    } else {
+        ESP_LOGE(TAG, "No Se ha encontrado una operacion de schedules");
+    }
+    
+
+
+    /**
+     * Es necesario extraer la info para refrescar el schedule de la pantalla.
+     * {"Schedule":{"Schedules":[{"id":"GO41","operation":"enable"}]}}
+     */
+
+    ESP_LOGE(TAG, "Se ha recibido informacion: %.*s", payload_len, (char*) payload);
+}
+
 void set_mqtt_status(bool status) {
 
     ESP_LOGI(TAG, "Status mqtt: %d", status);
@@ -86,6 +119,14 @@ void set_mqtt_status(bool status) {
     if (status == true) {
         set_lcd_update_wifi_status(true);
     }
+    char *id_node = esp_rmaker_get_node_id();
+    char topic[80] = {0};
+    sprintf(topic, "node/%s/params/remote", id_node);
+    esp_err_t error = esp_rmaker_mqtt_subscribe(topic, topic_cb, 0, NULL);
+
+
+
+
 
 }
 

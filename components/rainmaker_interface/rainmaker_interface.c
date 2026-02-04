@@ -302,38 +302,7 @@ void event_handler_sync (struct timeval *tv) {
 }
 
 
-static void topic_cb (const char *topic, void *payload, size_t payload_len, void *priv_data) {
 
-    cJSON *json;
-    cJSON *schedules;
-
-    
-    json = cJSON_Parse((char*) payload);
-
-    if (json == NULL) {
-        ESP_LOGW(TAG, "El payload recibido no es json");
-        return;
-    }
-
-    schedules = cJSON_GetObjectItem(json, "Schedule");
-    if (schedules != NULL) {
-
-        ESP_LOGW(TAG, "Se ha encontrado una operacion de schedules");
-        //esp_timer_create(&update_lcd_schedules_shot_timer_args, &timer_update_lcd);
-        //esp_timer_start_once(timer_update_lcd, 1000000);
-    } else {
-        ESP_LOGE(TAG, "No Se ha encontrado una operacion de schedules");
-    }
-    
-
-
-    /**
-     * Es necesario extraer la info para refrescar el schedule de la pantalla.
-     * {"Schedule":{"Schedules":[{"id":"GO41","operation":"enable"}]}}
-     */
-
-    ESP_LOGE(TAG, "Se ha recibido informacion: %.*s", payload_len, (char*) payload);
-}
 
 
 /* Event handler for catching RainMaker events */
@@ -413,13 +382,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
             case RMAKER_MQTT_EVENT_CONNECTED:
                 ESP_LOGI(TAG, "event_handler_MQTT Connected.");
                 send_event_app_broker_status(true);
-                /*
-                set_mqtt_status(true);
-                char *id_node = esp_rmaker_get_node_id();
-                char topic[80] = {0};
-                sprintf(topic, "node/%s/params/remote", id_node);
-                esp_err_t error = esp_rmaker_mqtt_subscribe(topic, topic_cb, 0, NULL);
-                */
+
                 break;
             case RMAKER_MQTT_EVENT_DISCONNECTED:
                 ESP_LOGI(TAG, "event_handler_MQTT Disconnected.");
