@@ -41,6 +41,7 @@ char* alarm2mnemonic(ALARM_APP alarm) {
 void init_alarms() {
 
     int i;
+    // Todas las alarmas a true. Se iran apagando segun 
     for (i=0;i<N_ALARMS;i++) {
         alarms[i] = true;
     }

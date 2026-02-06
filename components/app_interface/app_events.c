@@ -2,6 +2,7 @@
 
 #include "app_events.h"
 #include "app_interface.h"
+#include "app_alarms.h"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -153,9 +154,16 @@ void receive_event_app(event_app_t event) {
             break;
 
         case EVENT_APP_ALARM_OFF:
-
-        break;
+        if (get_active_alarms() == 0) {
+            set_lcd_update_icon_errors(false);
+        }
+            
+            break;
         case EVENT_APP_ALARM_ON:
+         if (get_active_alarms() == 0) {
+            set_lcd_update_icon_errors(true);
+        }
+            break;
 
         break;
 

@@ -3,6 +3,7 @@
 #include "rainmaker_interface.h"
 #include "app_interface.h"
 #include "app_events.h"
+#include "app_alarms.h"
 #include <string.h>
 #include <inttypes.h>
 #include <freertos/FreeRTOS.h>
@@ -287,13 +288,14 @@ void event_handler_sync (struct timeval *tv) {
     case SNTP_SYNC_STATUS_COMPLETED:
         ESP_LOGI(TAG, "La sincronizacion esta completada");
         send_event_app_status(STATUS_APP_SYNCHRONIZED);
+        set_alarm(NTP_ALARM, ALARM_APP_OFF);
 
         break;
 
 
     case SNTP_SYNC_STATUS_IN_PROGRESS:  
         ESP_LOGE(TAG, "La sincronizacion esta en progreso");
-        //set_alarm(NTP_ALARM, ALARM_APP_ON);
+        set_alarm(NTP_ALARM, ALARM_APP_ON);
 
     break; // Smooth time sync in progress.
     

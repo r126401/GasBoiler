@@ -40,3 +40,4 @@ void send_event_app_broker_status(bool status);
 void send_event_app_qr_display(char *qrcode);
 void send_event_app_update_schedule();
 void send_event_app_start_schedule(float setpoint_temperature);
+void send_event_app_alarm(EVENT_APP alarm);

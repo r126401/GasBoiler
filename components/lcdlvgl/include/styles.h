@@ -23,6 +23,7 @@ void configure_style_text_mode();
 void configure_style_layout_notification();
 void configure_style_layout_schedule();
 void configure_style_schedule();
+void configure_style_status_ok();
 lv_style_t * get_style_buttons_threshold();
 lv_style_t * get_style_buttons_threshold_pressed();
 lv_style_t * get_style_layout_threshold();
@@ -32,6 +33,7 @@ lv_style_t * get_style_text_mode();
 lv_style_t * get_style_layout_notification();
 lv_style_t *get_style_layout_schedule();
 lv_style_t *get_style_schedule();
+lv_style_t* get_style_ok();
 
 
 

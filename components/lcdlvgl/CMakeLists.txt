@@ -7,6 +7,7 @@ idf_component_register(SRCS
 "ic_heating.c" 
 "ic_thermometer.c" 
 "ic_threshold.c" 
+"ic_warning.c"
 "rgblcd.c"
 INCLUDE_DIRS 
 "include" 

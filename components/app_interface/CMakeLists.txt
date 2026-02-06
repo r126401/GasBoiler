@@ -1,5 +1,5 @@
 idf_component_register(SRCS 
-"app_interface.c" "app_events.c"
+"app_interface.c" "app_events.c" "app_alarms.c"
 INCLUDE_DIRS 
 "include"
 #REQUIRES nvs_flash esp_timer thermostat_task rgb_task

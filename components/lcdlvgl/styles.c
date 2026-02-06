@@ -16,11 +16,17 @@ lv_style_t style_text_mode;
 lv_style_t style_layout_notification;
 lv_style_t style_layout_schedule;
 lv_style_t style_schedule;
+lv_style_t style_ok;
 
 
 
 LV_FONT_DECLARE(russo36);
 
+
+lv_style_t* get_style_ok() {
+
+    return &style_ok;
+}
 
 lv_style_t * get_style_layout_notification()  {
 
@@ -217,3 +223,13 @@ void configure_style_layout_notification() {
 }
 
 
+void configure_style_status_ok() {
+
+    lv_style_init(&style_ok);
+    lv_style_set_text_color(&style_ok, lv_color_hex(LV_COLOR_TEXT_NOTIFICATION));
+    lv_style_set_text_font(&style_ok, &lv_font_montserrat_16);
+    lv_style_set_pad_all(&style_ok, 8);
+
+
+
+}

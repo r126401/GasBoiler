@@ -1,6 +1,7 @@
 
 
 #include "app_interface.h"
+#include "app_alarms.h"
 #include "rainmaker_interface.h"
 #include "rainmaker_schedule.h"
 
@@ -52,11 +53,15 @@ void set_wifi_status(int status) {
             set_lcd_update_wifi_status(true);
             if (get_current_status_app(STATUS_APP_CONNECTING)) {
                 set_status_app(STATUS_APP_CONNECTED);
+                set_alarm(WIFI_ALARM, ALARM_APP_OFF);
             }
         break;
 
         case 1:
         case 5:
+            set_alarm(WIFI_ALARM, ALARM_APP_ON);
+            set_alarm(MQTT_ALARM, ALARM_APP_ON);
+            set_lcd_update_wifi_status(false);
             ESP_LOGE(TAG, "Se ha perdido la señal wifi. Event id: %d", status);
             set_lcd_update_broker_status(false);
             if (get_current_status_app() == STATUS_APP_FACTORY) {
@@ -87,7 +92,10 @@ void set_mqtt_status(bool status) {
     ESP_LOGI(TAG, "Status mqtt: %d", status);
     set_lcd_update_broker_status(status);
     if (status == true) {
+        set_alarm(MQTT_ALARM, ALARM_APP_OFF);
         set_lcd_update_wifi_status(true);
+    } else {
+        set_alarm(MQTT_ALARM, ALARM_APP_ON);
     }
 
     subscribe_remote_events();

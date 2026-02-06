@@ -59,9 +59,12 @@ lv_obj_t *text_from_schedule;
 lv_obj_t *text_to_schedule;
 lv_obj_t *label_percent;
 lv_obj_t *progress_schedule;
+lv_obj_t *icon_warning;
+
 
 lv_timer_t *timer_time;
 lv_timer_t *mytimer;
+
 
 lv_obj_t *lv_label_provisioning;
 
@@ -83,6 +86,7 @@ static const lv_font_t * normal_font;
 LV_IMAGE_DECLARE(ic_threshold);
 LV_IMAGE_DECLARE(ic_thermometer);
 LV_IMAGE_DECLARE(ic_heating);
+LV_IMAGE_DECLARE(ic_warning);
 
 
 float incdec = 0.5;
@@ -730,6 +734,115 @@ static void lv_create_layout_schedule() {
 }
 
 
+static void event_handler_button_close(lv_event_t *e) {
+
+
+    lv_obj_t * btn = lv_event_get_current_target(e);
+    lv_obj_t * mbox = lv_obj_get_parent(lv_obj_get_parent(btn));
+    lv_msgbox_close(mbox);
+
+}
+
+
+static void create_msgbox_errors() {
+
+    lv_obj_t *box;
+    lv_obj_t *table_status;
+
+    int size_x = CONFIG_LCD_H_RES;
+    int size_y = CONFIG_LCD_V_RES;
+
+
+    box = lv_msgbox_create(screen_main_thermostat);
+    lv_obj_set_size(box, size_x, size_y);
+    lv_msgbox_add_title(box, "Estado del termostato");
+    lv_obj_set_pos(box, 0,0);
+    configure_style_status_ok();
+    lv_obj_add_style(box, get_style_ok(), LV_PART_MAIN);
+    table_status = lv_table_create(box);
+    lv_obj_add_style(table_status, get_style_ok(), LV_PART_ITEMS);
+    lv_obj_set_size(table_status, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    lv_table_set_column_width(table_status, 0, size_x -100);
+    lv_table_set_column_width(table_status, 1, size_x - 400);
+    lv_table_set_row_count(table_status, 4);
+
+
+    lv_table_set_cell_value(table_status, 0,0, "Conexion Wifi");
+
+    //lv_color_t color = lv_obj_get_style_text_color(icon_wifi, LV_PART_MAIN);
+
+    if (lv_color_eq(lv_obj_get_style_text_color(icon_wifi, LV_PART_MAIN), lv_color_hex(LV_COLOR_TEXT_NOTIFICATION))) {
+        lv_table_set_cell_value(table_status, 0, 1, LV_SYMBOL_OK);
+    } else {
+        lv_table_set_cell_value(table_status, 0, 1, LV_SYMBOL_CLOSE);
+    }
+
+    lv_table_set_cell_value(table_status, 1,0, "Conexion al broker");
+
+    if (lv_color_eq(lv_obj_get_style_text_color(icon_broker, LV_PART_MAIN), lv_color_hex(LV_COLOR_TEXT_NOTIFICATION))) {
+        lv_table_set_cell_value(table_status, 1, 1, LV_SYMBOL_OK);
+    } else {
+        lv_table_set_cell_value(table_status, 1, 1, LV_SYMBOL_CLOSE);
+    }
+
+
+    
+    lv_table_set_cell_value(table_status, 2,0, "Sincronizacion de reloj");
+
+     if (lv_color_eq(lv_obj_get_style_text_color(date_text, LV_PART_MAIN), lv_color_hex(LV_COLOR_TEXT_NOTIFICATION))) {
+        lv_table_set_cell_value(table_status, 2, 1, LV_SYMBOL_OK);
+    } else {
+        lv_table_set_cell_value(table_status, 2, 1, LV_SYMBOL_CLOSE);
+    }
+
+    
+
+    lv_table_set_cell_value(table_status, 3,0, "Sensor de temperatura");
+    lv_table_set_cell_value(table_status, 3, 1, LV_SYMBOL_OK);
+   
+
+    lv_obj_t *close = lv_msgbox_add_footer_button(box, "Salir");
+    lv_obj_add_event_cb(close, event_handler_button_close, LV_EVENT_CLICKED, NULL);
+
+    
+
+
+
+    
+
+
+
+
+
+}
+
+
+static void lv_event_handler_button_warning(lv_event_t *event) {
+
+    /**
+     * Rutina para tratar las alarmas del dispositivo
+     */
+
+ 
+    create_msgbox_errors();
+
+
+
+}
+
+void create_warning_icon() {
+
+    
+    icon_warning = lv_image_create(screen_main_thermostat);
+    lv_image_set_src(icon_warning, &ic_warning);
+    lv_obj_set_pos(icon_warning, lv_pct(4), lv_pct(30));
+    lv_obj_add_flag(icon_warning, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_add_event_cb(icon_warning, lv_event_handler_button_warning, LV_EVENT_CLICKED, NULL);
+
+}
+
+
 void create_screen() {
 
     mytimer = NULL;
@@ -745,6 +858,7 @@ void create_screen() {
     lv_update_threshold_temperature(get_setpoint_temperature());
 	create_layout_buttons_threshold();
 	create_heating_icon();
+    create_warning_icon();
     lv_update_heating(false);
 	create_label_text_mode();
     lv_create_device_name();
@@ -879,4 +993,17 @@ void lv_enable_button_mode(bool enable) {
         lv_obj_remove_flag(button_mode, LV_OBJ_FLAG_CLICKABLE);
 
     }
+}
+
+
+void lv_update_icon_errors(bool errors) {
+
+    if (errors == false) {
+
+        lv_obj_add_flag(icon_warning, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_clear_flag(icon_warning, LV_OBJ_FLAG_HIDDEN);
+    }
+
+
 }

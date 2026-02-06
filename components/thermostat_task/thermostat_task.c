@@ -1,6 +1,7 @@
 
 #include "thermostat_task.h"
 #include "app_interface.h"
+#include "app_alarms.h"
 #include "events_lcd.h"
 #include "esp_err.h"
 #include "stdbool.h"
@@ -238,13 +239,13 @@ static esp_err_t read_temperature(float *temperature_metered)
 	if ((error = ds18b20_get_temperature(*ds18b20s, temperature_metered)) == ESP_OK) {
 
         ESP_LOGI(TAG, "Alarma de sensor off");
-		//set_alarm(SENSOR_ALARM, ALARM_APP_OFF);
+		set_alarm(SENSOR_ALARM, ALARM_APP_OFF);
 
 	} else {
 
         ESP_LOGE(TAG, "Alarma de sensor on");
 
-		//set_alarm(SENSOR_ALARM, ALARM_APP_ON);
+		set_alarm(SENSOR_ALARM, ALARM_APP_ON);
 	}
 
 	

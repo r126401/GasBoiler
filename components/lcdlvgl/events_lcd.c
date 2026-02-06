@@ -199,7 +199,7 @@ static void receive_lcd_event(event_lcd_t event) {
 
         case UPDATE_ICON_ERRORS:
 
-        //lv_update_icon_errors(event.status);
+        lv_update_icon_errors(event.status);
 
         break;
 
