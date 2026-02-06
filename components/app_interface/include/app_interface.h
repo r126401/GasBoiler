@@ -8,6 +8,7 @@
 #include <stdbool.h>
 
 
+
 //#include <esp_log.h>
 //#include <esp_event.h>
 //#include <nvs_flash.h>
@@ -77,7 +78,6 @@ typedef enum {
 void init_app_environment();
 float get_setpoint_temperature();
 void notify_current_temperature(float current_temperature);
-void notify_sensor_fail();
 int get_read_interval();
 void set_read_interval(int read_interval);
 status_app_t get_status_gas_boiler();
@@ -92,6 +92,7 @@ void notify_status_factory(char* data_register);
 void notify_current_status_app();
 void notify_update_schedule();
 void notify_start_schedule(float setpoint_temperature);
+void notify_sensor_fail(bool alarm);
 void print_qr_register(char* register_data);
 void set_status_app(status_app_t status);
 void set_temperature_correction(float correction_temperature);

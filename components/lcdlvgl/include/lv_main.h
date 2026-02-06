@@ -16,6 +16,7 @@
 
 #define SIZE_BUTTONS 50
 #define SIZE_BUTTONS_THRESHOLD 55
+#define NO_TIME "NO TIME!"
 
 
 void create_screen();

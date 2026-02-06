@@ -118,12 +118,19 @@ static void create_text_version(char *version) {
 void lv_update_show_wifi(bool action) {
 
 	//lv_obj_set_flag(icon_wifi, LV_OBJ_FLAG_HIDDEN, action);
+
+    if (action) {
+        lv_obj_remove_flag(icon_wifi, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(icon_wifi,LV_OBJ_FLAG_HIDDEN);
+    }
+    /*
 	if (action) {
 		lv_obj_set_style_opa(icon_wifi, LV_OPA_100, LV_PART_MAIN);
 	} else {
 		lv_obj_set_style_opa(icon_wifi, LV_OPA_0, LV_PART_MAIN);
 	}
-
+*/
 
 
 }
@@ -131,12 +138,19 @@ void lv_update_show_wifi(bool action) {
 void lv_update_show_broker(bool action) {
 
 
+    if (action) {
+        lv_obj_remove_flag(icon_broker, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(icon_broker,LV_OBJ_FLAG_HIDDEN);
+    }
+
+/*
 	if (action) {
 		lv_obj_set_style_opa(icon_broker, LV_OPA_100, LV_PART_MAIN);
 	} else {
 		lv_obj_set_style_opa(icon_broker, LV_OPA_0, LV_PART_MAIN);
 	}
-
+*/
 }
 
 
@@ -165,7 +179,7 @@ void lv_update_time(int hour, int minute) {
     if (date_text != NULL) {
 
         if ((hour == -1) || (minute == -1)) {
-            lv_label_set_text(date_text, "NO TIME!");
+            lv_label_set_text(date_text, NO_TIME);
             lv_obj_set_style_text_color(date_text, lv_color_hex(LV_COLOR_TEXT_FAIL_NOTIFICATION), LV_PART_MAIN);
 
          } else {
@@ -771,28 +785,32 @@ static void create_msgbox_errors() {
 
     //lv_color_t color = lv_obj_get_style_text_color(icon_wifi, LV_PART_MAIN);
 
-    if (lv_color_eq(lv_obj_get_style_text_color(icon_wifi, LV_PART_MAIN), lv_color_hex(LV_COLOR_TEXT_NOTIFICATION))) {
-        lv_table_set_cell_value(table_status, 0, 1, LV_SYMBOL_OK);
-    } else {
+    if (lv_obj_has_flag(icon_wifi, LV_OBJ_FLAG_HIDDEN)) {
         lv_table_set_cell_value(table_status, 0, 1, LV_SYMBOL_CLOSE);
+    } else {
+        lv_table_set_cell_value(table_status, 0, 1, LV_SYMBOL_OK);
     }
 
-    lv_table_set_cell_value(table_status, 1,0, "Conexion al broker");
+     lv_table_set_cell_value(table_status, 1,0, "Conexion al broker");
 
-    if (lv_color_eq(lv_obj_get_style_text_color(icon_broker, LV_PART_MAIN), lv_color_hex(LV_COLOR_TEXT_NOTIFICATION))) {
-        lv_table_set_cell_value(table_status, 1, 1, LV_SYMBOL_OK);
-    } else {
+    if (lv_obj_has_flag(icon_broker, LV_OBJ_FLAG_HIDDEN)) {
         lv_table_set_cell_value(table_status, 1, 1, LV_SYMBOL_CLOSE);
+    } else {
+        lv_table_set_cell_value(table_status, 1, 1, LV_SYMBOL_OK);
     }
 
 
     
     lv_table_set_cell_value(table_status, 2,0, "Sincronizacion de reloj");
 
-     if (lv_color_eq(lv_obj_get_style_text_color(date_text, LV_PART_MAIN), lv_color_hex(LV_COLOR_TEXT_NOTIFICATION))) {
-        lv_table_set_cell_value(table_status, 2, 1, LV_SYMBOL_OK);
-    } else {
+
+    if (strcmp(lv_label_get_text(date_text), NO_TIME) == 0) {
+
+
         lv_table_set_cell_value(table_status, 2, 1, LV_SYMBOL_CLOSE);
+    } else {
+        lv_table_set_cell_value(table_status, 2, 1, LV_SYMBOL_OK);
+
     }
 
     

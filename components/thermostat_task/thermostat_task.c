@@ -317,7 +317,7 @@ void task_iotThermostat()
             n_errors++;
 			if (n_errors > CONFIG_ERROR_READING_TEMPERATURE) {
 				ESP_LOGE(TAG, "Llevamos %d errores de lectura consecutivos", n_errors);
-                notify_sensor_fail();
+                set_alarm(SENSOR_ALARM, true);
 				
 
 			} else {

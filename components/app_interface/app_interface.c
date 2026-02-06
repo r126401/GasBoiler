@@ -364,10 +364,17 @@ void notify_current_status_app() {
 }
 
 
-void notify_sensor_fail() {
+void notify_sensor_fail(bool alarm) {
     
-    platform_notify_sensor_fail();
-    set_lcd_update_icon_errors(true);
+    if (get_active_alarms() == 0) {
+        set_lcd_update_icon_errors(false);
+    }
+ 
+    if ((get_current_status_app() == STATUS_APP_AUTO) || (get_current_status_app() == STATUS_APP_MANUAL)) {
+            platform_notify_sensor_fail();
+            set_lcd_update_icon_errors(alarm);
+
+    }
 
 }
 
