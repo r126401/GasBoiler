@@ -772,6 +772,7 @@ static void create_msgbox_errors() {
     lv_msgbox_add_title(box, "Estado del termostato");
     lv_obj_set_pos(box, 0,0);
     configure_style_status_ok();
+    lv_obj_remove_flag(box, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_style(box, get_style_ok(), LV_PART_MAIN);
     table_status = lv_table_create(box);
     lv_obj_add_style(table_status, get_style_ok(), LV_PART_ITEMS);
