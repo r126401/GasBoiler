@@ -31,5 +31,6 @@ typedef enum THERMOSTAT_MODE {
 
 void create_task_thermostat();
 THERMOSTAT_ACTION thermostat_action(float current_temperature);
+void remove_task_thermostat();
 
 

@@ -13,6 +13,8 @@
 #include <nvs_flash.h>
 #include "esp_err.h"
 #include "esp_wifi.h"
+#include "esp_app_desc.h"
+
 
 #include <esp_event.h>
 #include <nvs_flash.h>
@@ -254,6 +256,13 @@ char* platform_get_device_name() {
 
 }
 
+
+
+
+
+
+
+
 int platform_set_read_interval(int read_interval) {
 
     esp_rmaker_param_t *param;
@@ -268,6 +277,20 @@ int platform_set_read_interval(int read_interval) {
     }
 
 
+}
+
+
+void platform_change_name_device(char *name) {
+
+    esp_rmaker_param_t *param;
+
+    param = esp_rmaker_device_get_param_by_name(gasBoiler_device, ESP_RMAKER_DEF_NAME_PARAM);
+    if (param != NULL) {
+        esp_rmaker_param_update_and_report(param, esp_rmaker_str(name));
+
+    } else {
+        ESP_LOGE(TAG, "No se ha podido modificar el nombre del dispositivo");
+    }
 }
 
 
@@ -465,6 +488,9 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         switch(event_id) {
             case RMAKER_OTA_EVENT_STARTING:
                 ESP_LOGI(TAG, "event_handler_Starting OTA.");
+                send_event_app_ota_start();
+                ESP_LOGI("APP", "Ejecutando tarea: %s", pcTaskGetName(NULL));
+        
                 break;
             case RMAKER_OTA_EVENT_IN_PROGRESS:
                 ESP_LOGI(TAG, "event_handler_OTA is in progress.");
@@ -562,7 +588,22 @@ static esp_err_t message_cloud_received(const esp_rmaker_device_t *device, const
 
         }
         
-        break;
+       
+
+        ESP_LOGE(TAG, "comparamos %s, con %s", name_param, ESP_RMAKER_DEF_NAME_PARAM);
+       if ((strcmp(name_param, ESP_RMAKER_DEF_NAME_PARAM)) == 0) {
+        char *nombre;
+        nombre = (char*) calloc(strlen(name_param), sizeof(char));
+        bzero(nombre, strlen(nombre));
+        strcpy(nombre, val.val.s);
+        ESP_LOGI(TAG, "Received Name from cloud %s", nombre);
+        send_event_app_change_name(nombre);
+            //send_event_app_read_interval(val.val.i);
+            break;
+
+        }
+        
+    
 
         
 
@@ -625,6 +666,17 @@ static esp_err_t message_cloud_received(const esp_rmaker_device_t *device, const
 
 }
 
+char* platform_get_version() {
+
+    esp_app_desc_t *description;
+
+    description = esp_app_get_description();
+    return description->version;
+    
+
+
+}
+
 
 
 
@@ -657,6 +709,7 @@ void rainmaker_interface_init_environment() {
     ESP_ERROR_CHECK(esp_event_handler_register(APP_NETWORK_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(RMAKER_OTA_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler_wifi, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(RMAKER_OTA_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
 
 
 
@@ -828,6 +881,7 @@ void rainmaker_interface_init_environment() {
 
 
 sntp_set_time_sync_notification_cb(event_handler_sync);
+//send_event_app_change_name(get_device_name());
 
 
 

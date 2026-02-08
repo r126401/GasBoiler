@@ -98,6 +98,10 @@ char* event_app_2mnemonic(EVENT_APP type) {
             strncpy(mnemonic, "EVENT_APP_START_SCHEDULE", 30);
         break;
 
+        case EVENT_APP_CHANGE_NAME:
+            strncpy(mnemonic, "EVENT_APP_CHANGE_NAME", 30);
+        break;
+
     }
 
 
@@ -126,6 +130,9 @@ void receive_event_app(event_app_t event) {
             break;
 
         case EVENT_APP_OTA:
+
+        set_environment_ota();
+
         break;
 
         case EVENT_APP_SETPOINT_THRESHOLD:
@@ -181,6 +188,11 @@ void receive_event_app(event_app_t event) {
 
         break;
 
+        case EVENT_APP_CHANGE_NAME:
+        notify_change_name_device(event.value_char);
+
+        break;
+
 
     }
 
@@ -219,6 +231,7 @@ void create_event_app_task() {
 
 	xTaskCreatePinnedToCore(event_app_task, "event_app_task", /*CONFIG_RESOURCE_EVENT_TASK*/ 1024 * 3, NULL, 0, NULL,1);
 	ESP_LOGW(TAG, "TAREA DE EVENTOS DE APLICACION CREADA CREADA");
+    
 
 
 }
@@ -344,6 +357,21 @@ void send_event_app_start_schedule(float setpoint_temperature) {
     event_app_t event;
     event.event_app = EVENT_APP_START_SCHEDULE;
     event.value_float = setpoint_temperature;
+    send_event_app(event);
+}
+
+void send_event_app_ota_start() {
+
+    event_app_t event;
+    event.event_app = EVENT_APP_OTA;
+    send_event_app(event);
+}
+
+void send_event_app_change_name(char* name) {
+
+    event_app_t event;
+    event.event_app = EVENT_APP_CHANGE_NAME;
+    event.value_char = name;
     send_event_app(event);
 }
 

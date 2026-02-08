@@ -124,6 +124,11 @@ char* event_lcd_2_mnemonic(EVENT_TYPE_LCD type_lcd) {
         strncpy(mnemonic, "UPDATE_BUTTON_INSTALATION", 30);
         break;
 
+        case UPDATE_NAME_DEVICE:
+        strncpy(mnemonic, "UPDATE_NAME_DEVICE", 30);
+        break;
+
+
        
     }
 
@@ -240,6 +245,11 @@ static void receive_lcd_event(event_lcd_t event) {
         case UPDATE_BUTTON_INSTALATION:
 
         //lv_set_button_instalation(event.status);
+        break;
+
+        case UPDATE_NAME_DEVICE:
+
+        lv_update_device_name(event.text);
         break;
 
 
@@ -437,6 +447,11 @@ void set_lcd_update_button_mode_clickable(bool clickable) {
 void set_lcd_hide_qr_register() {
 
     update_lcd_bool(QR_CONFIRMED, true);
+}
+
+void set_lcd_update_name_device(char *name_device) {
+
+    update_lcd_char(UPDATE_NAME_DEVICE, name_device);
 }
 
 

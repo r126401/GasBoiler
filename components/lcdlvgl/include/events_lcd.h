@@ -23,7 +23,8 @@ typedef enum EVENT_TYPE_LCD {
     QR_CONFIRMED,
     UPGRADE_FIRMWARE,
     ERROR_FACTORY,
-    UPDATE_BUTTON_INSTALATION
+    UPDATE_BUTTON_INSTALATION,
+    UPDATE_NAME_DEVICE
 
 
 
@@ -65,5 +66,6 @@ void set_lcd_update_error_factory();
 void set_lcd_update_button_instalation(bool show);
 void set_lcd_qr_register(char *register_data);
 void set_lcd_update_button_mode_clickable(bool clickable);
+void set_lcd_update_name_device(char *name_device);
 
 

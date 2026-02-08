@@ -25,6 +25,7 @@
 
 
 extern EventGroupHandle_t evt_between_task;
+TaskHandle_t thermostat_handle = NULL;
 
 
 
@@ -340,7 +341,7 @@ void task_iotThermostat()
 
 void create_task_thermostat() {
 
-     xTaskCreatePinnedToCore(task_iotThermostat, "tarea_lectura_temperatura", 1024*3, (void*) NULL, 4, NULL,1);
+     xTaskCreatePinnedToCore(task_iotThermostat, "tarea_lectura_temperatura", 1024*3, (void*) NULL, 4, &thermostat_handle,1);
      ESP_LOGW(TAG, "Tarea thermostat task creada");
 
 
@@ -348,3 +349,9 @@ void create_task_thermostat() {
 }
 
 
+void remove_task_thermostat() {
+
+    vTaskDelete(thermostat_handle);
+    thermostat_handle = NULL;
+    ESP_LOGW(TAG, "thermostat_task eliminada");
+}

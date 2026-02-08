@@ -142,6 +142,7 @@ void time_refresh(void *arg) {
     uint32_t interval;
 
   
+    print_resources();
     
     
     if (esp_sntp_get_sync_status() == SNTP_SYNC_STATUS_IN_PROGRESS) {
@@ -231,6 +232,7 @@ void update_time_valid(bool timevalid) {
 void init_app_environment() {
     
     rainmaker_interface_init_environment();
+    
 
 }
 
@@ -378,6 +380,13 @@ void notify_sensor_fail(bool alarm) {
 
 }
 
+void set_environment_ota() {
+
+    remove_task_thermostat();
+
+
+}
+
 
 static bool exists_shcedules(int *min_of_day, int *min_of_trigger, float *setpoint_temperature) {
 
@@ -486,6 +495,24 @@ float get_current_temperature() {
 
 }
 
+char *get_version_app() {
+
+    return platform_get_version();
+}
+
+
+
+void print_resources() {
+
+    /*
+    char buffer[1024];
+    vTaskList(buffer);
+    printf("Nombre     Estado   Prio   Stack   Num\n%s\n", buffer);
+    heap_caps_print_heap_info(MALLOC_CAP_DEFAULT);
+    */
+
+}
+
 
 void reset_device() {
 
@@ -543,6 +570,21 @@ void notify_status_factory(char* data_register) {
 
     print_qr_register(data_register);
     set_status_app(STATUS_APP_FACTORY);
+
+}
+
+
+void notify_change_name_device(char *name) {
+
+    set_lcd_update_name_device(name);
+    platform_change_name_device(name);
+
+}
+
+char* get_device_name() {
+
+    return platform_get_device_name();
+
 
 }
 

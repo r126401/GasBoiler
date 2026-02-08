@@ -101,7 +101,7 @@ static void create_text_version(char *version) {
     //const esp_app_desc_t *app_desc = esp_app_get_description();
 
     lv_label_set_text_fmt(label_version, "v%s", version);
-    lv_obj_set_pos(label_version, lv_pct(90),lv_pct(91.5));
+    lv_obj_set_pos(label_version, lv_pct(85),lv_pct(91.5));
 
 
 }
@@ -866,7 +866,7 @@ void create_screen() {
 
     mytimer = NULL;
 	init_main_screen();
-	create_text_version("1.0");
+	create_text_version(get_version_app());
 	create_layout_notification();
     lv_update_time(-1, -1);
 	configure_style_buttons_threshold();
@@ -882,7 +882,7 @@ void create_screen() {
 	create_label_text_mode();
     lv_create_device_name();
     lv_create_layout_schedule();
-    lv_update_device_name(CONFIG_ESP_RMAKER_NAME_DEVICE);
+    lv_update_device_name(get_device_name());
     lv_update_text_mode(" ");
     ESP_LOGI(TAG, "Creada la pantalla principal");
     
@@ -994,11 +994,11 @@ void lv_update_schedule(bool show, int min, int max, int index) {
     }
     
 
-    lv_bar_set_range(progress_schedule, min, max);
+    lv_bar_set_range(progress_schedule, 0, max-min);
 
     ESP_LOGI(TAG, "min: %d, max: %d, index: %d", min, max, index);
 
-    lv_bar_set_value(progress_schedule, index, LV_ANIM_OFF);
+    lv_bar_set_value(progress_schedule, 0, LV_ANIM_OFF);
 
 
 
