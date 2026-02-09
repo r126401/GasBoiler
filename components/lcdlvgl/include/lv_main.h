@@ -36,6 +36,7 @@ void lv_update_hide_qr_code(bool action);
 void lv_enable_button_mode(bool enable);
 void lv_update_schedule(bool show, int min, int max, int index);
 void lv_update_icon_errors(bool errors);
+void lv_update_progress_ota(bool show, int index);
 
 
 

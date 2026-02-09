@@ -62,6 +62,7 @@ lv_obj_t *progress_schedule;
 lv_obj_t *icon_warning;
 
 
+
 lv_timer_t *timer_time;
 lv_timer_t *mytimer;
 
@@ -990,11 +991,14 @@ void lv_update_schedule(bool show, int min, int max, int index) {
         lv_label_set_text_fmt(text_to_schedule, "%02d:%02d*", hour, minute);
     } else {
         lv_label_set_text_fmt(text_to_schedule, "%02d:%02d", hour, minute);
+        max = max - min;
 
     }
+    min = 0;
+    index = 0;
     
 
-    lv_bar_set_range(progress_schedule, 0, max-min);
+    lv_bar_set_range(progress_schedule, index, max);
 
     ESP_LOGI(TAG, "min: %d, max: %d, index: %d", min, max, index);
 
@@ -1024,5 +1028,25 @@ void lv_update_icon_errors(bool errors) {
         lv_obj_clear_flag(icon_warning, LV_OBJ_FLAG_HIDDEN);
     }
 
+
+}
+
+void lv_update_progress_ota(bool show, int index) {
+
+    static int progress;
+
+    if (!show) {
+        lv_obj_add_flag(progress_schedule, LV_OBJ_FLAG_HIDDEN);
+        ESP_LOGI(TAG, "Finalizamos el ota");
+        return;
+    }
+    progress += 10;
+    lv_label_set_text_fmt(label_percent, "%02d%%", progress);
+    lv_obj_remove_flag(label_percent, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_remove_flag(layout_schedule, LV_OBJ_FLAG_HIDDEN);
+    lv_bar_set_range(progress_schedule, 0, 100);
+    lv_bar_set_value(progress_schedule, progress, LV_ANIM_OFF);
+    lv_label_set_text(text_from_schedule, "0%");
+    lv_label_set_text(text_to_schedule, "100%");
 
 }

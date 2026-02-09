@@ -413,6 +413,8 @@ static void event_handler_wifi(void* arg, esp_event_base_t event_base, int32_t e
 static void event_handler(void* arg, esp_event_base_t event_base,
                           int32_t event_id, void* event_data)
 {
+
+
     if (event_base == RMAKER_EVENT) {
         switch (event_id) {
             case RMAKER_EVENT_INIT_DONE:
@@ -497,7 +499,8 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         
                 break;
             case RMAKER_OTA_EVENT_IN_PROGRESS:
-                ESP_LOGI(TAG, "event_handler_OTA is in progress.");
+                ESP_LOGI(TAG, "event_handler_OTA is in progress");
+                send_event_app_upgrading_firmware(0);
                 break;
             case RMAKER_OTA_EVENT_SUCCESSFUL:
                 ESP_LOGI(TAG, "event_handler_OTA successful.");

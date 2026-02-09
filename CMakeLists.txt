@@ -15,6 +15,6 @@ cmake_minimum_required(VERSION 3.22)
 # Add RainMaker components and other common application components
 #set(EXTRA_COMPONENT_DIRS ${RMAKER_PATH}/components ${RMAKER_PATH}/examples/common)
 
-set(PROJECT_VER "2.0beta")
+set(PROJECT_VER "99.5")
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(GasBoiler)

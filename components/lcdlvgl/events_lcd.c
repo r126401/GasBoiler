@@ -218,9 +218,7 @@ static void receive_lcd_event(event_lcd_t event) {
             break;
 
         case UPDATE_PERCENT:
-
-        //lv_update_percent(event.par1);
-        //lv_paint_qr_code(event.text);
+        lv_update_progress_ota(true, event.par1);
         
         break;
 
@@ -400,7 +398,7 @@ void set_lcd_update_text_schedule(int par1, int par2, int par3) {
 
     update_lcd_int(UPDATE_TEXT_SCHEDULE, par1, par2, par3, true);
 }
-void set_lcd_update_percent(float percent) {
+void set_lcd_update_percent(int percent) {
 
     update_lcd_int(UPDATE_PERCENT, percent, -1, -1, true);
 

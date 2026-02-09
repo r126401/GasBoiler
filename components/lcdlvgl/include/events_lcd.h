@@ -58,7 +58,7 @@ void set_lcd_update_heating(bool status);
 void set_lcd_update_threshold_temperature(float threshold);
 void set_lcd_update_schedule(bool status, int par1, int par2, int par3);
 void set_lcd_update_text_schedule(int par1, int par2, int par3);
-void set_lcd_update_percent(float percent);
+void set_lcd_update_percent(int percent);
 void set_lcd_update_icon_errors(bool status);
 void set_lcd_hide_qr_register();
 void set_lcd_update_upgrade_firmware(char* message, int cursor);

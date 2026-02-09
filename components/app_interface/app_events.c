@@ -102,6 +102,10 @@ char* event_app_2mnemonic(EVENT_APP type) {
             strncpy(mnemonic, "EVENT_APP_CHANGE_NAME", 30);
         break;
 
+        case EVENT_APP_UPGRADE_PERCENT:
+            strncpy(mnemonic, "EVENT_APP_UPGRADE_PERCENT", 30);
+        break;
+
     }
 
 
@@ -190,9 +194,12 @@ void receive_event_app(event_app_t event) {
 
         case EVENT_APP_CHANGE_NAME:
         notify_change_name_device(event.value_char);
-
         break;
 
+        case EVENT_APP_UPGRADE_PERCENT:
+        set_lcd_update_percent(event.value_int);
+        
+        break;
 
     }
 
@@ -372,6 +379,14 @@ void send_event_app_change_name(char* name) {
     event_app_t event;
     event.event_app = EVENT_APP_CHANGE_NAME;
     event.value_char = name;
+    send_event_app(event);
+}
+
+void send_event_app_upgrading_firmware(int percent) {
+
+    event_app_t event;
+    event.event_app = EVENT_APP_UPGRADE_PERCENT;
+    event.value_int = percent;
     send_event_app(event);
 }
 
