@@ -1,6 +1,7 @@
 
 
 #include "app_interface.h"
+#include "app_events.h"
 #include "app_alarms.h"
 #include "rainmaker_interface.h"
 #include "rainmaker_schedule.h"
@@ -37,6 +38,7 @@ extern EventGroupHandle_t evt_between_task;
 status_app_t current_status;
 float current_correction_temperature = -3.5;
 int current_read_interval = 60;
+
 
 
 
@@ -576,6 +578,10 @@ void notify_status_factory(char* data_register) {
 
 void notify_change_name_device(char *name) {
 
+    if (name == NULL) {
+        ESP_LOGE(TAG, "No se ha podido extraer el nombre del dispositivo");
+        return;
+    }
     set_lcd_update_name_device(name);
     platform_change_name_device(name);
 
@@ -630,6 +636,7 @@ static void set_status_syncing() {
 
 
     set_lcd_update_text_mode(TEXT_STATUS_APP_SYNCING);
+    
 
 
 }
@@ -741,6 +748,7 @@ void set_status_app(status_app_t status) {
     if (status == STATUS_APP_SYNCHRONIZED) {
 
         update_time_valid(true);
+        send_event_app_change_name(get_device_name());
         if (exists_shcedules(&min_of_day, &min_of_trigger, &setpoint_temperature) == false) {
             set_status_manual();
             current_status = STATUS_APP_MANUAL;

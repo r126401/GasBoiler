@@ -243,12 +243,15 @@ void platform_notify_current_status_app() {
 
 char* platform_get_device_name() {
 
-    char *name;
+    char *name = NULL;
+    char *name_device = NULL;
     esp_rmaker_param_t *param;
     param = esp_rmaker_device_get_param_by_name(gasBoiler_device, ESP_RMAKER_DEF_NAME_PARAM);
     if (param != NULL) {
         name = esp_rmaker_param_get_val(param)->val.s;
-        return name;
+        name_device = (char*) calloc(strlen(name), sizeof(char));
+        strcpy(name_device, name);
+        return name_device;
     } else {
         ESP_LOGE(TAG, "No se ha podido extraer el nombre del dispositivo");
         return NULL;
@@ -449,6 +452,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
             case RMAKER_MQTT_EVENT_CONNECTED:
                 ESP_LOGI(TAG, "event_handler_MQTT Connected.");
                 send_event_app_broker_status(true);
+                
 
                 break;
             case RMAKER_MQTT_EVENT_DISCONNECTED:
@@ -881,7 +885,7 @@ void rainmaker_interface_init_environment() {
 
 
 sntp_set_time_sync_notification_cb(event_handler_sync);
-//send_event_app_change_name(get_device_name());
+
 
 
 

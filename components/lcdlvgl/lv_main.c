@@ -701,7 +701,7 @@ static void lv_create_device_name() {
     lv_name_device = lv_label_create(screen_main_thermostat);
     lv_obj_set_pos(lv_name_device,70,5);
     //lv_obj_align_to(lv_name_device, button_main_reset, LV_ALIGN_OUT_RIGHT_MID, 5, 0);
-    lv_label_set_text(lv_name_device, "Gas Boiler");
+    lv_label_set_text(lv_name_device, "-----");
 }
 
 
