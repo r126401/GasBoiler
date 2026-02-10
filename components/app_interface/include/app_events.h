@@ -17,7 +17,8 @@ typedef enum EVENT_APP {
     EVENT_APP_UPDATE_SCHEDULE,
     EVENT_APP_START_SCHEDULE,
     EVENT_APP_CHANGE_NAME,
-    EVENT_APP_UPGRADE_PERCENT
+    EVENT_APP_UPGRADE_PERCENT,
+    EVENT_APP_DATA_PUBLISHED
 
 }EVENT_APP;
 
@@ -29,6 +30,8 @@ typedef struct event_app_t {
     char* value_char;
     EVENT_APP event_app;
 } event_app_t;
+
+
 
 
 
@@ -45,4 +48,5 @@ void send_event_app_start_schedule(float setpoint_temperature);
 void send_event_app_alarm(EVENT_APP alarm);
 void send_event_app_ota_start();
 void send_event_app_change_name(char* name);
-void send_event_app_upgrading_firmware(int percent);
+void send_event_app_ota(ota_event_t ota_event);
+void send_event_app_data_published(bool published);

@@ -16,50 +16,6 @@
 
 static char *TAG = "rainmaker_schedule.c";
 
-uint8_t get_schedules_list() {
-
-    cJSON *json;
-    cJSON *schedules;
-    cJSON *schedule;
-    uint8_t n_triggers = 0;
-
-
-
-    char *params_list = esp_rmaker_get_node_params();
-    ESP_LOGI(TAG, "CONFIGURACION: %s", params_list);
-
-    if (params_list != NULL) {
-        json =cJSON_Parse(params_list);
-        if (json != NULL) {
-            ESP_LOGI(TAG, "Eliminamos los parametros porque ya no hacen falta");
-            free(params_list);
-            //Localizamos los schedules
-
-            schedule = cJSON_GetObjectItem(json, "Schedule");
-            if (schedule == NULL) {
-                ESP_LOGW(TAG, "No se han localizado schedules");
-            } else {
-                schedules = cJSON_GetObjectItem(schedule, "schedules");
-                if (schedules != NULL) {
-                    n_triggers = cJSON_GetArraySize(schedules);
-                    ESP_LOGI(TAG, "Son %ld schedules, y son : %s", n_triggers , cJSON_Print(schedules));
-                    cJSON_Delete(json);
-                    ESP_LOGI(TAG, "Borrado el json");
-                } else {
-                    ESP_LOGE(TAG, "Habia etiqueta schedule pero no schedules");
-                }
-
-                
-            }
-
-        } else {
-            ESP_LOGE(TAG, "Error al intentar leer los schedule");
-        }
-    }
-
-    return n_triggers;
-   
-}
 
 static bool apply_mask_today(int tm_wday, uint8_t rm_mask)
 {
@@ -214,6 +170,7 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
     if ((programacion = cJSON_GetObjectItem(json, "schedule")) == NULL) {
 
         ESP_LOGW(TAG, "No hay schedules");
+        cJSON_Delete(json);
         return ESP_FAIL;
 
     }
@@ -221,11 +178,13 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
     if ((schedules = cJSON_GetObjectItem(programacion, "schedules")) == NULL) {
 
         ESP_LOGE(TAG, "Habia etiqueta pero no hay schedules");
+        cJSON_Delete(json);
         return ESP_FAIL;
     }
     n_schedules = cJSON_GetArraySize(schedules);
     if (n_schedules == 0) {
         ESP_LOGW(TAG, "No hay ningun schedule. pasaremos a modo manual");
+        cJSON_Delete(json);
         return n_schedules;
     }
 
@@ -233,6 +192,7 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
         elements = (schedules_t*) calloc(n_schedules, sizeof(schedules_t));
         if (elements == NULL) {
             ESP_LOGE(TAG, "Fallo al reservar memoria para los schedules");
+            cJSON_Delete(json);
             return ESP_FAIL;
         }
     }
@@ -256,6 +216,7 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
         if ((trigger = cJSON_GetObjectItem(item_schedule, "triggers")) == NULL) {
 
             ESP_LOGE(TAG, "Error al extraer el trigger");
+            cJSON_Delete(json);
             return ESP_FAIL;
         }
 
@@ -275,6 +236,7 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
     
     if (n_programs == 0) {
         ESP_LOGW(TAG, "No hay schedules activos o que mapeen con la mascara.");
+        cJSON_Delete(json);
         return n_programs;
     }
 
@@ -315,6 +277,7 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
                     *min_of_trigger = elements[i].trigger;
                     *setpoint_temperature = elements[i-1].temperature;
                     ESP_LOGW(TAG, "Encontrado y retornamos. Soy el %d elemento, trigger %d > min_of day %d. setpoint :%.1f", i, elements[i].trigger, *min_of_day, *setpoint_temperature);
+                    cJSON_Delete(json);
                     return n_programs;
                 }
 
@@ -332,7 +295,7 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
     }
 
     ESP_LOGW(TAG, " Hay %d programas activos. Los minutos del dia son %d, y el elemento es elemento es %d y el setpoint %.1f", n_programs, *min_of_day, *min_of_trigger, *setpoint_temperature);
-
+    cJSON_Delete(json);
 
     return n_programs;
 

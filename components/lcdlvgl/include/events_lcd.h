@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include "app_interface.h"
 
 #pragma once
 
@@ -24,7 +25,8 @@ typedef enum EVENT_TYPE_LCD {
     UPGRADE_FIRMWARE,
     ERROR_FACTORY,
     UPDATE_BUTTON_INSTALATION,
-    UPDATE_NAME_DEVICE
+    UPDATE_NAME_DEVICE,
+    UPDATE_DATA_PUBLISHED
 
 
 
@@ -51,7 +53,7 @@ void set_lcd_update_time(int par1, int par2, int par3);
 void set_lcd_update_text_mode(char *text_mode);
 void set_lcd_update_label_mode(char *mode);
 void set_lcd_update_temperature(float temperature);
-void set_lcd_update_wifi_status(bool status);
+void set_lcd_update_wifi_status(bool status, wifi_signal_t signal);
 void set_lcd_update_broker_status(bool status);
 void set_lcd_update_bluetooth(bool status);
 void set_lcd_update_heating(bool status);
@@ -67,5 +69,6 @@ void set_lcd_update_button_instalation(bool show);
 void set_lcd_qr_register(char *register_data);
 void set_lcd_update_button_mode_clickable(bool clickable);
 void set_lcd_update_name_device(char *name_device);
+void set_lcd_update_data_published_received(bool published);
 
 

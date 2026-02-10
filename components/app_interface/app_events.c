@@ -106,6 +106,10 @@ char* event_app_2mnemonic(EVENT_APP type) {
             strncpy(mnemonic, "EVENT_APP_UPGRADE_PERCENT", 30);
         break;
 
+        case EVENT_APP_DATA_PUBLISHED:
+            strncpy(mnemonic, "EVENT_APP_DATA_PUBLISHED", 30);
+            break;
+
     }
 
 
@@ -135,7 +139,7 @@ void receive_event_app(event_app_t event) {
 
         case EVENT_APP_OTA:
 
-        set_environment_ota();
+        set_event_ota(event.value_int);
 
         break;
 
@@ -198,7 +202,10 @@ void receive_event_app(event_app_t event) {
 
         case EVENT_APP_UPGRADE_PERCENT:
         set_lcd_update_percent(event.value_int);
-        
+        break;
+
+        case EVENT_APP_DATA_PUBLISHED:
+            notify_data_published(event.value_bool);
         break;
 
     }
@@ -367,10 +374,11 @@ void send_event_app_start_schedule(float setpoint_temperature) {
     send_event_app(event);
 }
 
-void send_event_app_ota_start() {
+void send_event_app_ota(ota_event_t ota_event) {
 
     event_app_t event;
     event.event_app = EVENT_APP_OTA;
+    event.value_int = ota_event;
     send_event_app(event);
 }
 
@@ -382,13 +390,15 @@ void send_event_app_change_name(char* name) {
     send_event_app(event);
 }
 
-void send_event_app_upgrading_firmware(int percent) {
+void send_event_app_data_published(bool published) {
 
     event_app_t event;
-    event.event_app = EVENT_APP_UPGRADE_PERCENT;
-    event.value_int = percent;
+    event.event_app = EVENT_APP_DATA_PUBLISHED;
+    event.value_bool = published;
     send_event_app(event);
 }
+
+
 
 
 

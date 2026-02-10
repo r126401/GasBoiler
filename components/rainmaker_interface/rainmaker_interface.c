@@ -343,6 +343,10 @@ static void topic_cb (const char *topic, void *payload, size_t payload_len, void
         return;
     }
 
+
+    send_event_app_data_published(false);
+    set_lcd_update_wifi_status(true, get_status_signal_wifi());
+
     schedules = cJSON_GetObjectItem(json, "Schedule");
     if (schedules != NULL) {
 
@@ -362,6 +366,7 @@ static void topic_cb (const char *topic, void *payload, size_t payload_len, void
      */
 
     ESP_LOGE(TAG, "Se ha recibido informacion: %.*s", payload_len, (char*) payload);
+    cJSON_Delete(json);
 }
 
 esp_err_t subscribe_remote_events() {
@@ -463,7 +468,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                 break;
             case RMAKER_MQTT_EVENT_PUBLISHED:
                 ESP_LOGI(TAG, "event_handler_MQTT Published. Msg id: %d.", *((int *)event_data));
-                //get_schedules_list();
+                send_event_app_data_published(true);
                 break;
             default:
                 ESP_LOGW(TAG, "event_handler_Unhandled RainMaker Common Event: %"PRIi32, event_id);
@@ -494,13 +499,13 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         switch(event_id) {
             case RMAKER_OTA_EVENT_STARTING:
                 ESP_LOGI(TAG, "event_handler_Starting OTA.");
-                send_event_app_ota_start();
+                send_event_app_ota(OTA_EVENT_STARTING);
                 ESP_LOGI("APP", "Ejecutando tarea: %s", pcTaskGetName(NULL));
         
                 break;
             case RMAKER_OTA_EVENT_IN_PROGRESS:
                 ESP_LOGI(TAG, "event_handler_OTA is in progress");
-                send_event_app_upgrading_firmware(0);
+                send_event_app_ota(OTA_EVENT_IN_PROGRESS);
                 break;
             case RMAKER_OTA_EVENT_SUCCESSFUL:
                 ESP_LOGI(TAG, "event_handler_OTA successful.");

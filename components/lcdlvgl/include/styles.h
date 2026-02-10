@@ -14,6 +14,7 @@
 #define LV_COLOR_TEXT_NOTIFICATION 0x81D1F9
 #define LV_COLOR_TEXT_FAIL_NOTIFICATION 0XFF0000
 #define LV_COLOR_DATE 0XFFFFFF
+#define LV_COLOR_TEXT_WARNING 0xFFFF00
 
 void configure_style_threshold();
 void configure_style_buttons_threshold();

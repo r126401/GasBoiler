@@ -9,6 +9,7 @@
 
 #include "events_lcd.h"
 #include "lv_main.h"
+#include "esp_interface.h"
 
 
 
@@ -128,6 +129,10 @@ char* event_lcd_2_mnemonic(EVENT_TYPE_LCD type_lcd) {
         strncpy(mnemonic, "UPDATE_NAME_DEVICE", 30);
         break;
 
+        case UPDATE_DATA_PUBLISHED:
+        strncpy(mnemonic, "UPDATE_DATA_PUBLISHED", 30);
+        break;
+
 
        
     }
@@ -168,7 +173,7 @@ static void receive_lcd_event(event_lcd_t event) {
 
         case UPDATE_WIFI_STATUS:
 
-            lv_update_show_wifi(event.status);
+            lv_update_show_wifi(event.status, event.par1);
 
         break;
 
@@ -248,6 +253,10 @@ static void receive_lcd_event(event_lcd_t event) {
         case UPDATE_NAME_DEVICE:
 
         lv_update_device_name(event.text);
+        break;
+
+        case UPDATE_DATA_PUBLISHED:
+        lv_update_data_published_received(event.status);
         break;
 
 
@@ -358,9 +367,9 @@ void set_lcd_update_temperature(float temperature) {
     update_lcd_float(UPDATE_TEMPERATURE, temperature);
 
 }
-void set_lcd_update_wifi_status(bool status) {
+void set_lcd_update_wifi_status(bool status, wifi_signal_t signal) {
 
-    update_lcd_bool(UPDATE_WIFI_STATUS, status);
+    update_lcd_int(UPDATE_WIFI_STATUS, signal, -1, -1, status);
 
 }
 void set_lcd_update_broker_status(bool status) {
@@ -452,4 +461,8 @@ void set_lcd_update_name_device(char *name_device) {
     update_lcd_char(UPDATE_NAME_DEVICE, name_device);
 }
 
+void set_lcd_update_data_published_received(bool published) {
+
+    update_lcd_bool(UPDATE_DATA_PUBLISHED, published);
+}
 

@@ -9,6 +9,7 @@
 
 
 
+
 //#include <esp_log.h>
 //#include <esp_event.h>
 //#include <nvs_flash.h>
@@ -73,6 +74,35 @@ typedef enum {
     ON = 1
 } STATUS_RELAY;
 
+/** ESP RainMaker Events */
+typedef enum {
+    /* Invalid event. Used for internal handling only */
+    OTA_EVENT_INVALID = 0,
+    /** RainMaker OTA is Starting */
+    OTA_EVENT_STARTING,
+    /** RainMaker OTA has Started */
+    OTA_EVENT_IN_PROGRESS,
+    /** RainMaker OTA Successful */
+    OTA_EVENT_SUCCESSFUL,
+    /** RainMaker OTA Failed */
+    OTA_EVENT_FAILED,
+    /** RainMaker OTA Rejected */
+    OTA_EVENT_REJECTED,
+    /** RainMaker OTA Delayed */
+    OTA_EVENT_DELAYED,
+    /** OTA Image has been flashed and active partition changed. Reboot is requested. Applicable only if Auto reboot is disabled **/
+    OTA_EVENT_REQ_FOR_REBOOT,
+} ota_event_t;
+
+#define WIFI_LEVEL_SIGNAL_HIGH -60
+#define WIFI_LEVEL_SIGNAL_LOW -75
+
+typedef enum {
+    WIFI_SIGNAL_HIGH,
+    WIFI_SIGNAL_MEDIUM,
+    WIFI_SIGNAL_LOW
+} wifi_signal_t;
+
 
 
 void init_app_environment();
@@ -94,6 +124,7 @@ void notify_update_schedule();
 void notify_start_schedule(float setpoint_temperature);
 void notify_sensor_fail(bool alarm);
 void print_qr_register(char* register_data);
+void notify_data_published(bool published);
 void set_status_app(status_app_t status);
 void set_temperature_correction(float correction_temperature);
 void notify_device_started();
@@ -104,9 +135,12 @@ void update_time_valid(bool timevalid);
 bool get_now(uint32_t *hour, uint32_t *min, uint32_t *sec);
 STATUS_RELAY relay_operation(STATUS_RELAY op);
 char* status2mnemonic(status_app_t status);
-void set_environment_ota();
+void set_event_ota(ota_event_t ota_event);
 char *get_version_app();
 char* get_device_name();
 void print_resources();
 void notify_change_name_device(char *name);
+wifi_signal_t get_status_signal_wifi();
+
+
 

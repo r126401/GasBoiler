@@ -17,6 +17,7 @@
 #include "esp_timer.h"
 #include "esp_sntp.h"
 #include "driver/gpio.h"
+#include "esp_wifi.h"
 
 
 
@@ -52,7 +53,7 @@ void set_wifi_status(int status) {
         case 0:
         case 4:
             ESP_LOGE(TAG, "Se ha obtenido direccion ip y estamos conectados a internet. Event id: %d", status);
-            set_lcd_update_wifi_status(true);
+            set_lcd_update_wifi_status(true, WIFI_SIGNAL_HIGH);
             if (get_current_status_app(STATUS_APP_CONNECTING)) {
                 set_status_app(STATUS_APP_CONNECTED);
                 set_alarm(WIFI_ALARM, ALARM_APP_OFF);
@@ -63,7 +64,7 @@ void set_wifi_status(int status) {
         case 5:
             set_alarm(WIFI_ALARM, ALARM_APP_ON);
             set_alarm(MQTT_ALARM, ALARM_APP_ON);
-            set_lcd_update_wifi_status(false);
+            set_lcd_update_wifi_status(false, WIFI_SIGNAL_LOW);
             ESP_LOGE(TAG, "Se ha perdido la señal wifi. Event id: %d", status);
             set_lcd_update_broker_status(false);
             if (get_current_status_app() == STATUS_APP_FACTORY) {
@@ -71,6 +72,11 @@ void set_wifi_status(int status) {
             set_status_app(STATUS_APP_PROVISIONING);
         }
         break;
+
+        case 21:
+            ESP_LOGW(TAG, "Posiblemente se ha perdido la señal wifi");
+            set_lcd_update_wifi_status(true, WIFI_SIGNAL_MEDIUM);
+            break;
 
         case 43:
             if (get_current_status_app() == STATUS_APP_PROVISIONING) {
@@ -95,7 +101,7 @@ void set_mqtt_status(bool status) {
     set_lcd_update_broker_status(status);
     if (status == true) {
         set_alarm(MQTT_ALARM, ALARM_APP_OFF);
-        set_lcd_update_wifi_status(true);
+        set_lcd_update_wifi_status(true, WIFI_SIGNAL_HIGH);
     } else {
         set_alarm(MQTT_ALARM, ALARM_APP_ON);
     }
@@ -135,6 +141,29 @@ bool get_now(uint32_t *hour, uint32_t *min, uint32_t *sec) {
 
 }
 
+wifi_signal_t get_status_signal_wifi() {
+
+    wifi_signal_t signal;
+    wifi_ap_record_t ap_info;
+
+
+    if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
+        printf("RSSI al conectar: %d dBm\n", ap_info.rssi);
+    }
+
+    if (ap_info.rssi >= WIFI_LEVEL_SIGNAL_HIGH) {
+        signal = WIFI_SIGNAL_HIGH;   // Verde
+    } else if (ap_info.rssi >= WIFI_LEVEL_SIGNAL_LOW) {
+        signal = WIFI_SIGNAL_MEDIUM;   // Amarillo
+    } else {
+        signal = WIFI_SIGNAL_LOW;   // Rojo
+    }
+
+    return signal;
+
+
+}
+
 
 void time_refresh(void *arg) {
 
@@ -143,7 +172,12 @@ void time_refresh(void *arg) {
     uint32_t sec;
     uint32_t interval;
 
+    
   
+
+    set_lcd_update_wifi_status(true, get_status_signal_wifi());
+
+
     print_resources();
     
     
@@ -176,6 +210,16 @@ void time_refresh(void *arg) {
 }
 
 
+void notify_data_published(bool published) {
+
+    
+    set_lcd_update_data_published_received(published);
+    print_resources();
+    
+    
+
+}
+
 
 
 
@@ -188,6 +232,7 @@ void update_time_valid(bool timevalid) {
     uint32_t resto = 0;
     static bool sync = false;
 
+    print_resources();
 
     if (timevalid) {
 
@@ -204,19 +249,12 @@ void update_time_valid(bool timevalid) {
             set_status_app(STATUS_APP_SYNCHRONIZED);
             //lv_update_time(hour, min);
             set_lcd_update_time(hour, min, 0);
-/*
-            if (get_app_status() == STATUS_APP_AUTO) {
-                lv_update_lcd_schedule(true);
-
-            }
-  */          
 
         } 
 
     } else {
-        //lv_update_time(-1,-1);
         set_lcd_update_time(-1, -1, 0);
-        //set_lcd_update_time(-1, -1);
+
     }
 
 
@@ -271,54 +309,54 @@ char* status2mnemonic(status_app_t status) {
     switch(status) {
 
         case STATUS_APP_FACTORY:
-            strncpy(mnemonic, TEXT_STATUS_APP_FACTORY, 30);
+            strncpy(mnemonic, CONFIG_TEXT_STATUS_APP_FACTORY, 30);
         break;
 
         case STATUS_APP_ERROR:
-            strncpy(mnemonic, TEXT_STATUS_APP_ERROR, 30);
+            strncpy(mnemonic, CONFIG_TEXT_STATUS_APP_ERROR, 30);
         break;
 
         case STATUS_APP_AUTO:
-           strncpy(mnemonic, TEXT_STATUS_APP_AUTO, 30);
+           strncpy(mnemonic, CONFIG_TEXT_STATUS_APP_AUTO, 30);
         break;
         case STATUS_APP_MANUAL:
-           strncpy(mnemonic, TEXT_STATUS_APP_MANUAL, 30);
+           strncpy(mnemonic, CONFIG_TEXT_STATUS_APP_MANUAL, 30);
 
         break;
 
         case STATUS_APP_STARTING:
-           strncpy(mnemonic, TEXT_STATUS_APP_STARTING, 30);
+           strncpy(mnemonic, CONFIG_TEXT_STATUS_APP_STARTING, 30);
 
         break;
 
         case STATUS_APP_CONNECTING:
-           strncpy(mnemonic, TEXT_STATUS_APP_CONNECTING, 30);
+           strncpy(mnemonic, CONFIG_TEXT_STATUS_APP_CONNECTING, 30);
 
         break;
 
         case STATUS_APP_CONNECTED:
-           strncpy(mnemonic, TEXT_STATUS_APP_CONNECTED, 30);
+           strncpy(mnemonic, CONFIG_TEXT_STATUS_APP_CONNECTED, 30);
 
         break;
 
         case STATUS_APP_SYNCING:
-           strncpy(mnemonic, TEXT_STATUS_APP_SYNCING, 30);
+           strncpy(mnemonic, CONFIG_TEXT_STATUS_APP_SYNCING, 30);
 
         break;
 
         case STATUS_APP_SYNCHRONIZED:
-            strncpy(mnemonic, TEXT_STATUS_APP_SYNCHRONIZED, 30);
+            strncpy(mnemonic, CONFIG_TEXT_STATUS_APP_SYNCHRONIZED, 30);
 
         break;
 
 
         case STATUS_APP_UPGRADING:
-           strncpy(mnemonic, TEXT_STATUS_APP_UPGRADING, 30);
+           strncpy(mnemonic, CONFIG_TEXT_STATUS_APP_UPGRADING, 30);
 
         break;
 
         case STATUS_APP_PROVISIONING:
-            strncpy(mnemonic, TEXT_STATUS_APP_PROVISIONING, 30);
+            strncpy(mnemonic, CONFIG_TEXT_STATUS_APP_PROVISIONING, 30);
         break;
 
         default:
@@ -382,11 +420,48 @@ void notify_sensor_fail(bool alarm) {
 
 }
 
-void set_environment_ota() {
+void set_event_ota(ota_event_t ota_event) {
 
-    remove_task_thermostat();
+    ESP_LOGW(TAG, "Cambiando a modo upgrading");
+    
 
+    switch (ota_event) {
 
+        case OTA_EVENT_STARTING:
+            set_status_app(STATUS_APP_UPGRADING);
+               set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_UPGRADING);
+               remove_task_thermostat();
+               set_lcd_update_percent(0);
+
+            break;
+        case OTA_EVENT_IN_PROGRESS:
+            set_lcd_update_percent(10);
+            break;
+
+    case OTA_EVENT_REJECTED:
+    case OTA_EVENT_INVALID:
+        ESP_LOGE(TAG, "Upgrade rechazado o invalido!");
+        create_task_thermostat();
+        set_status_app(STATUS_APP_AUTO);
+        break;
+    
+
+    case OTA_EVENT_FAILED:
+        ESP_LOGE(TAG, "Upgrade fallido!");
+        create_task_thermostat();
+        set_status_app(STATUS_APP_AUTO);
+        break;
+    
+    case OTA_EVENT_DELAYED:
+        ESP_LOGW(TAG, " Upgrade demorado");
+        create_task_thermostat();
+        set_status_app(STATUS_APP_AUTO);
+        break;
+
+    default:
+        ESP_LOGW(TAG, "Evento ota no contemplado");
+        break;
+    }
 }
 
 
@@ -506,6 +581,9 @@ char *get_version_app() {
 
 void print_resources() {
 
+    size_t free_heap = esp_get_free_heap_size();
+    ESP_LOGI(TAG, "Heap libre: %u bytes\n", free_heap);
+
     /*
     char buffer[1024];
     vTaskList(buffer);
@@ -607,27 +685,27 @@ void print_qr_register(char* register_data) {
 
 static void set_status_starting() {
 
-    set_lcd_update_text_mode(TEXT_STATUS_APP_STARTING);
+    set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_STARTING);
     set_lcd_update_heating(false);
     set_lcd_update_bluetooth(false);
     set_lcd_update_broker_status(false);
-    set_lcd_update_wifi_status(false);
+    set_lcd_update_wifi_status(false, WIFI_SIGNAL_LOW);
         
 }
 
 
 static void set_status_factory() {
 
-    set_lcd_update_text_mode(TEXT_STATUS_APP_FACTORY);
+    set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_FACTORY);
     set_lcd_update_bluetooth(true);
-    set_lcd_update_wifi_status(false);
+    set_lcd_update_wifi_status(false, WIFI_SIGNAL_LOW);
     set_lcd_update_broker_status(false);
 }
 
 static void set_status_connecting() {
 
     set_lcd_hide_qr_register(true);
-    set_lcd_update_text_mode(TEXT_STATUS_APP_CONNECTING);
+    set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_CONNECTING);
     
 }
 
@@ -635,7 +713,7 @@ static void set_status_syncing() {
 
 
 
-    set_lcd_update_text_mode(TEXT_STATUS_APP_SYNCING);
+    set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_SYNCING);
     
 
 
@@ -643,7 +721,7 @@ static void set_status_syncing() {
 
 static void set_status_manual() {
 
-    set_lcd_update_text_mode(TEXT_STATUS_APP_MANUAL);
+    set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_MANUAL);
     set_lcd_update_button_mode_clickable(false);
 
 }
@@ -670,7 +748,7 @@ static void set_status_auto(uint32_t min_of_day, uint32_t min_of_trigger, float 
 
     //Se cambia la etiqueta a AUTO
     //update_time_valid(true);
-    set_lcd_update_text_mode(TEXT_STATUS_APP_AUTO);
+    set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_AUTO);
     //Se actualiza el schedule en el display
     set_lcd_update_schedule(true, min_of_day, min_of_trigger, min_of_day);
     //Se actualiza el setpoint temperatura en el display y se actua sobre la logica del termostato en base al umbral actualizado
@@ -682,11 +760,6 @@ static void set_status_auto(uint32_t min_of_day, uint32_t min_of_trigger, float 
 
 
 }
-
-
-
-
-
 
 
 
@@ -749,14 +822,19 @@ void set_status_app(status_app_t status) {
 
         update_time_valid(true);
         send_event_app_change_name(get_device_name());
-        if (exists_shcedules(&min_of_day, &min_of_trigger, &setpoint_temperature) == false) {
-            set_status_manual();
-            current_status = STATUS_APP_MANUAL;
-        } else {
+        if (current_status != STATUS_APP_UPGRADING) {
+            if (exists_shcedules(&min_of_day, &min_of_trigger, &setpoint_temperature) == false) {
+                set_status_manual();
+                current_status = STATUS_APP_MANUAL;
+            } else {
 
-            set_status_auto(min_of_day, min_of_trigger, setpoint_temperature);
-            current_status = STATUS_APP_AUTO;
+                set_status_auto(min_of_day, min_of_trigger, setpoint_temperature);
+                current_status = STATUS_APP_AUTO;
+            }
+        } else {
+            ESP_LOGW(TAG, "No cambiamos a auto o manual porque estamos en upgrading");
         }
+
         return;
         
     }
@@ -798,8 +876,11 @@ void set_status_app(status_app_t status) {
         
     }
 
-    //current_status = status;
-    //falta notificar el nuevo estado a la cloud
+    if (status == STATUS_APP_UPGRADING) {
+
+        current_status = status;
+    }
+
 
 }
 

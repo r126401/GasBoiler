@@ -9,6 +9,7 @@
 #define SOURCES_LV_MAIN_H_
 
 #include <stdbool.h>
+#include "app_interface.h"
 
 //#define CONFIG_LCD_H_RES 480
 //#define CONFIG_LCD_V_RES 272
@@ -20,7 +21,7 @@
 
 
 void create_screen();
-void lv_update_show_wifi(bool action);
+void lv_update_show_wifi(bool action, wifi_signal_t signal);
 void lv_update_show_broker(bool action);
 void lv_update_show_bluetooth(bool action);
 void lv_update_time(int hour, int min);
@@ -37,6 +38,7 @@ void lv_enable_button_mode(bool enable);
 void lv_update_schedule(bool show, int min, int max, int index);
 void lv_update_icon_errors(bool errors);
 void lv_update_progress_ota(bool show, int index);
+void lv_update_data_published_received(bool published);
 
 
 

@@ -113,14 +113,14 @@ menu "GAS BOILER PARAMETERS OF DEVICE"
 
         config TEXT_STATUS_APP_FACTORY
             string "No configuration status"
-            default "xEF\x81\xB1 NO CONFIGURE"
+            default "NO CONFIGURE"
             help
                 Is when the Gas Boiler start in mode factory
 
 
         config TEXT_STATUS_APP_ERROR
             string "Error status"
-            default "xEF\x81\xB1 ERROR"
+            default "ERROR"
             help
                 Is when the Gas Boiler is error
 
@@ -146,26 +146,42 @@ menu "GAS BOILER PARAMETERS OF DEVICE"
 
         config TEXT_STATUS_APP_CONNECTING
             string "Connecting status"
-            default "xEF\x81\xB1 CONNECTING"
+            default "CONNECTING"
+            help
+                Is when the Gas Boiler is connecting to network or mqtt broker
+
+        config TEXT_STATUS_APP_CONNECTED
+            string "Connected status"
+            default "CONNECTED"
+            help
+                Is when the Gas Boiler is connected to network or mqtt broker
+        config TEXT_STATUS_APP_SYNCHRONIZED
+            string "Syncrhonized status"
+            default "SYNCHRONIZED"
+            help
+                Is when the Gas Boiler is connecting to network or mqtt broker
+        config TEXT_STATUS_APP_PROVISIONING
+            string "Provisioning status"
+            default "PROVISIONING"
             help
                 Is when the Gas Boiler is connecting to network or mqtt broker
 
 
         config TEXT_STATUS_APP_SYNCING
             string "Syncing status"
-            default "xEF\x81\xB1 SYNCING"
+            default "SYNCING"
             help
                 Is when the Gas Boiler is syncing. Is after to connecting
     
         config TEXT_STATUS_APP_UPGRADING
             string "Syncing status"
-            default "xEF\x81\xB1 UPGRADING"
+            default "UPGRADING"
             help
                 Is when the Gas Boiler is syncing. Is after to connecting
 
         config TEXT_STATUS_APP_UNKNOWN
             string "Unknown status"
-            default "xEF\x81\xB1 UNKNOWN"
+            default "UNKNOWN"
             help
                 Is when the Gas Boiler is Unknown
 

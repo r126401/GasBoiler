@@ -32,6 +32,8 @@ lv_obj_t *icon_wifi;
 lv_obj_t *icon_broker;
 lv_obj_t *icon_bluetooth;
 lv_obj_t *qr_code;
+lv_obj_t *icon_data_published;
+lv_obj_t *icon_data_received;
 
 lv_obj_t *button_main_reset;
 lv_obj_t *label_main_reset;
@@ -65,6 +67,8 @@ lv_obj_t *icon_warning;
 
 lv_timer_t *timer_time;
 lv_timer_t *mytimer;
+lv_timer_t *timer_data;
+lv_timer_t *timer_received;
 
 
 lv_obj_t *lv_label_provisioning;
@@ -116,22 +120,31 @@ static void create_text_version(char *version) {
 
 
 
-void lv_update_show_wifi(bool action) {
+void lv_update_show_wifi(bool action, wifi_signal_t signal) {
 
-	//lv_obj_set_flag(icon_wifi, LV_OBJ_FLAG_HIDDEN, action);
+
 
     if (action) {
         lv_obj_remove_flag(icon_wifi, LV_OBJ_FLAG_HIDDEN);
+        switch(signal) {
+            case WIFI_SIGNAL_HIGH:
+
+                lv_obj_set_style_text_color(icon_wifi, lv_color_hex(LV_COLOR_TEXT_NOTIFICATION), LV_PART_MAIN);
+                break;
+
+            case WIFI_SIGNAL_MEDIUM:
+                lv_obj_set_style_text_color(icon_wifi, lv_color_hex(LV_COLOR_TEXT_WARNING), LV_PART_MAIN);
+                break;
+
+            case WIFI_SIGNAL_LOW:
+                lv_obj_set_style_text_color(icon_wifi, lv_color_hex(LV_COLOR_TEXT_FAIL_NOTIFICATION), LV_PART_MAIN);
+                break;
+
+        }
     } else {
         lv_obj_add_flag(icon_wifi,LV_OBJ_FLAG_HIDDEN);
     }
-    /*
-	if (action) {
-		lv_obj_set_style_opa(icon_wifi, LV_OPA_100, LV_PART_MAIN);
-	} else {
-		lv_obj_set_style_opa(icon_wifi, LV_OPA_0, LV_PART_MAIN);
-	}
-*/
+
 
 
 }
@@ -313,7 +326,7 @@ static void create_layout_notification() {
 	//Icono conexion del dispositivo
     icon_wifi = lv_label_create(layout_notification);
     lv_label_set_text(icon_wifi, LV_SYMBOL_WIFI);
-    lv_update_show_wifi(false);
+    lv_update_show_wifi(false, WIFI_SIGNAL_LOW);
 
 	//icono conexion al broker
 	icon_broker = lv_label_create(layout_notification);
@@ -325,6 +338,16 @@ static void create_layout_notification() {
 	icon_bluetooth = lv_label_create(layout_notification);
 	lv_label_set_text(icon_bluetooth, LV_SYMBOL_BLUETOOTH);
 	lv_update_show_bluetooth(false);
+
+	//icono data published
+	icon_data_published = lv_label_create(layout_notification);
+	lv_label_set_text(icon_data_published, LV_SYMBOL_UP);
+	lv_obj_add_flag(icon_data_published, LV_OBJ_FLAG_HIDDEN);
+
+	icon_data_received = lv_label_create(layout_notification);
+	lv_label_set_text(icon_data_received, LV_SYMBOL_DOWN);
+	lv_obj_add_flag(icon_data_received, LV_OBJ_FLAG_HIDDEN);
+
 
 
 }
@@ -686,7 +709,7 @@ static void create_label_text_mode() {
     lv_obj_t *layout_text_mode = lv_obj_create(screen_main_thermostat);
 
     lv_obj_set_pos(layout_text_mode, lv_pct(25), lv_pct(25));
-    lv_obj_set_size(layout_text_mode, 180, 20);
+    lv_obj_set_size(layout_text_mode, 190, 20);
     label_text_mode = lv_label_create(layout_text_mode);
     lv_obj_center(label_text_mode);
     configure_style_text_mode();
@@ -1034,19 +1057,87 @@ void lv_update_icon_errors(bool errors) {
 void lv_update_progress_ota(bool show, int index) {
 
     static int progress;
+    static uint8_t spinner_idx = 0;
+    static const char *spinner_chars[] = {
+    "-",
+    "\\",
+    "|",
+    "/"
+};
+
 
     if (!show) {
         lv_obj_add_flag(progress_schedule, LV_OBJ_FLAG_HIDDEN);
         ESP_LOGI(TAG, "Finalizamos el ota");
         return;
     }
-    progress += 10;
-    lv_label_set_text_fmt(label_percent, "%02d%%", progress);
-    lv_obj_remove_flag(label_percent, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_remove_flag(layout_schedule, LV_OBJ_FLAG_HIDDEN);
-    lv_bar_set_range(progress_schedule, 0, 100);
+    if (index == 0) {
+        lv_bar_set_range(progress_schedule, 0, 100);
+        lv_label_set_text(text_from_schedule, "0%");
+        lv_label_set_text(text_to_schedule, "100%");
+        lv_obj_remove_flag(label_percent, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_remove_flag(layout_schedule, LV_OBJ_FLAG_HIDDEN);
+
+    } else {
+         progress += 10;
+    }
+    spinner_idx = (spinner_idx + 1) % 4;
+
+    lv_label_set_text_fmt(label_percent, "Actualizando %s", spinner_chars[spinner_idx]);
     lv_bar_set_value(progress_schedule, progress, LV_ANIM_OFF);
-    lv_label_set_text(text_from_schedule, "0%");
-    lv_label_set_text(text_to_schedule, "100%");
 
 }
+
+static void data_published_cb(lv_timer_t *timer) {
+
+   
+
+    lv_obj_add_flag(icon_data_published, LV_OBJ_FLAG_HIDDEN);
+    lv_timer_pause(timer_data);
+
+}
+
+
+
+
+
+
+static void date_received_cb(lv_timer_t *timer) {
+
+    lv_obj_add_flag(icon_data_received, LV_OBJ_FLAG_HIDDEN);
+    lv_timer_pause(timer_received);
+
+}
+
+
+void lv_update_data_published_received(bool published) {
+
+
+    if (published) {
+        
+        if (timer_data == NULL) {
+            timer_data = lv_timer_create(data_published_cb, 500, NULL);
+        }
+        lv_timer_reset(timer_data);
+        lv_timer_resume(timer_data);
+        lv_obj_remove_flag(icon_data_published, LV_OBJ_FLAG_HIDDEN);
+
+    } else {
+
+        if (timer_received == NULL) {
+
+            timer_received = lv_timer_create(date_received_cb, 500, NULL);
+        }
+        lv_obj_remove_flag(icon_data_received, LV_OBJ_FLAG_HIDDEN);
+        lv_timer_reset(timer_received);
+        lv_timer_resume(timer_received);
+
+    }
+
+    
+
+
+
+}
+
+
