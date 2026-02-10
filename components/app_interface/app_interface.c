@@ -53,7 +53,7 @@ void set_wifi_status(int status) {
         case 0:
         case 4:
             ESP_LOGE(TAG, "Se ha obtenido direccion ip y estamos conectados a internet. Event id: %d", status);
-            set_lcd_update_wifi_status(true, WIFI_SIGNAL_HIGH);
+            set_lcd_update_wifi_status(true, get_status_signal_wifi());
             if (get_current_status_app(STATUS_APP_CONNECTING)) {
                 set_status_app(STATUS_APP_CONNECTED);
                 set_alarm(WIFI_ALARM, ALARM_APP_OFF);
@@ -75,7 +75,7 @@ void set_wifi_status(int status) {
 
         case 21:
             ESP_LOGW(TAG, "Posiblemente se ha perdido la señal wifi");
-            set_lcd_update_wifi_status(true, WIFI_SIGNAL_MEDIUM);
+            set_lcd_update_wifi_status(true, get_status_signal_wifi());
             break;
 
         case 43:
@@ -101,7 +101,7 @@ void set_mqtt_status(bool status) {
     set_lcd_update_broker_status(status);
     if (status == true) {
         set_alarm(MQTT_ALARM, ALARM_APP_OFF);
-        set_lcd_update_wifi_status(true, WIFI_SIGNAL_HIGH);
+        set_lcd_update_wifi_status(true, get_status_signal_wifi());
     } else {
         set_alarm(MQTT_ALARM, ALARM_APP_ON);
     }
@@ -148,7 +148,7 @@ wifi_signal_t get_status_signal_wifi() {
 
 
     if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
-        printf("RSSI al conectar: %d dBm\n", ap_info.rssi);
+        ESP_LOGW(TAG, "RSSI al conectar: %d dBm\n", ap_info.rssi);
     }
 
     if (ap_info.rssi >= WIFI_LEVEL_SIGNAL_HIGH) {
