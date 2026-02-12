@@ -270,8 +270,9 @@ int get_data_schedules(int *min_of_day, int *min_of_trigger, float *setpoint_tem
                     //primer schedule
                     *min_of_trigger = elements[i].trigger;
                     //setpoint del dia anterior
-                    *setpoint_temperature = elements[n_programs].temperature;
+                    *setpoint_temperature = elements[n_programs-1].temperature;
                     ESP_LOGW(TAG, "Soy el %d elemento, trigger %d > min_of day %d. setpoint :%.1f", i, elements[i].trigger, *min_of_day, *setpoint_temperature);
+                    return n_programs;
                 } else {
                     ESP_LOGW(TAG, "No es el elemento 0");
                     *min_of_trigger = elements[i].trigger;

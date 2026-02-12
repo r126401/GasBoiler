@@ -424,7 +424,8 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         switch (event_id) {
             case RMAKER_EVENT_INIT_DONE:
                 ESP_LOGI(TAG, "event_handler_RainMaker Initialised.");
-                notify_device_started();
+                //notify_device_started();
+                send_event_app_status(STATUS_APP_CONNECTING);
                 break;
             case RMAKER_EVENT_CLAIM_STARTED:
                 ESP_LOGI(TAG, "event_handler_RainMaker Claim Started.");
@@ -459,6 +460,11 @@ static void event_handler(void* arg, esp_event_base_t event_base,
             case RMAKER_MQTT_EVENT_CONNECTED:
                 ESP_LOGI(TAG, "event_handler_MQTT Connected.");
                 send_event_app_broker_status(true);
+                if (text_qrcode != NULL) {
+                    free(text_qrcode);
+                    text_qrcode = NULL;
+                    ESP_LOGW(TAG, "Liberada memoria del qrcode");
+                }
                 
 
                 break;
@@ -482,8 +488,6 @@ static void event_handler(void* arg, esp_event_base_t event_base,
                 }
                 strncpy(text_qrcode, event_data, strlen(event_data));
                 send_event_app_qr_display(text_qrcode);
-                //notify_status_factory(text_qrcode);
-                //falta liberar la memoria te text_qrcode cuando se acabe de provisionar
                 break;
             case APP_NETWORK_EVENT_PROV_TIMEOUT:
                 ESP_LOGI(TAG, "event_handler_Provisioning Timed Out. Please reboot.");

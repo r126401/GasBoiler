@@ -966,8 +966,14 @@ void lv_update_device_name(char *device_name) {
 void lv_update_hide_qr_code(bool action) {
 
 
-    lv_obj_del(qr_code);
-    lv_obj_del(lv_label_provisioning);
+    //lv_obj_add_flag(qr_code, LV_OBJ_FLAG_HIDDEN);
+    //lv_obj_add_flag(lv_label_provisioning, LV_OBJ_FLAG_HIDDEN);
+    if (qr_code != NULL) {
+        lv_obj_del(qr_code);
+        lv_obj_del(lv_label_provisioning);
+        ESP_LOGW(TAG, "Eliminado el QRCODE");
+
+    }
     /*
     if (action) {
         lv_obj_add_flag(qr_code, LV_OBJ_FLAG_HIDDEN);

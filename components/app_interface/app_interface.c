@@ -704,7 +704,8 @@ static void set_status_factory() {
 
 static void set_status_connecting() {
 
-    set_lcd_hide_qr_register(true);
+    
+    
     set_lcd_update_text_mode(CONFIG_TEXT_STATUS_APP_CONNECTING);
     
 }
@@ -791,13 +792,16 @@ void set_status_app(status_app_t status) {
 
     if (status == STATUS_APP_PROVISIONING) {
         set_lcd_update_text_mode(TEXT_STATUS_APP_PROVISIONING);
+        set_lcd_hide_qr_register(true);
         current_status = status;
         return;
     }
 
     if (status == STATUS_APP_CONNECTING) {
-        if (current_status == STATUS_APP_PROVISIONING) {
+        ESP_LOGW(TAG, "Hemos recibido STATUS_APP_CONNECTING  y el estado actual es %s", status2mnemonic(current_status));
+        if ((current_status == STATUS_APP_PROVISIONING) || (current_status == STATUS_APP_STARTING)) {
             //Hemos acabado el registro y vamos a conectarnos.
+            ESP_LOGW(TAG, "ESCONDIENDO EL QRCODE");
             set_status_connecting();
             current_status = STATUS_APP_CONNECTING;
             return;
