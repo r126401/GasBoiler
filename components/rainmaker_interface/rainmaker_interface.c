@@ -351,21 +351,11 @@ static void topic_cb (const char *topic, void *payload, size_t payload_len, void
     if (schedules != NULL) {
 
         ESP_LOGW(TAG, "Se ha encontrado una operacion de schedules");
-        //esp_timer_create(&update_lcd_schedules_shot_timer_args, &timer_update_lcd);
-        //esp_timer_start_once(timer_update_lcd, 1000000);
         send_event_app_update_schedule();
-    } else {
-        ESP_LOGE(TAG, "No Se ha encontrado una operacion de schedules");
     }
-    
 
 
-    /**
-     * Es necesario extraer la info para refrescar el schedule de la pantalla.
-     * {"Schedule":{"Schedules":[{"id":"GO41","operation":"enable"}]}}
-     */
-
-    ESP_LOGE(TAG, "Se ha recibido informacion: %.*s", payload_len, (char*) payload);
+    //ESP_LOGE(TAG, "Se ha recibido informacion: %.*s", payload_len, (char*) payload);
     cJSON_Delete(json);
 }
 
@@ -761,8 +751,7 @@ void rainmaker_interface_init_environment() {
         ESP_RMAKER_DEF_TEMPERATURE_NAME, 
         ESP_RMAKER_PARAM_TEMPERATURE, 
         esp_rmaker_float(22.5),
-        PROP_FLAG_READ | PROP_FLAG_WRITE | PROP_FLAG_PERSIST);
-        //assign_primary_param(param);
+        PROP_FLAG_READ);
         esp_rmaker_device_add_param(gasBoiler_device, param);
         esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
 
@@ -782,10 +771,9 @@ void rainmaker_interface_init_environment() {
     /* heating*/
     param = esp_rmaker_param_create(
         CONFIG_ESP_RMAKER_PARAM_HEATING_NAME,
-        //CONFIG_ESP_RMAKER_PARAM_HEATING,
-        "esp.param.power",
+        CONFIG_ESP_RMAKER_PARAM_HEATING,
         esp_rmaker_bool(false),
-        PROP_FLAG_READ | PROP_FLAG_WRITE);
+        PROP_FLAG_READ);
         esp_rmaker_param_add_ui_type(param, ESP_RMAKER_UI_TOGGLE);
         //esp_rmaker_device_assign_primary_param(gasBoiler_device, param);
         esp_rmaker_device_add_param(gasBoiler_device, param);
@@ -870,6 +858,7 @@ void rainmaker_interface_init_environment() {
     /* Enable Insights. Requires CONFIG_ESP_INSIGHTS_ENABLED=y */
     //app_insights_enable();
 
+    //esp_rmaker_local_ctrl_enable();
 
     /* Start the ESP RainMaker Agent */
     esp_rmaker_start();
