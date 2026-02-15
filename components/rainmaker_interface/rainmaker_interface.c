@@ -608,7 +608,7 @@ static esp_err_t message_cloud_received(const esp_rmaker_device_t *device, const
             break;
 
         }
-        
+        break;
     
 
         
@@ -637,7 +637,53 @@ static esp_err_t message_cloud_received(const esp_rmaker_device_t *device, const
     break;
     /** Request received from a local controller */
     case ESP_RMAKER_REQ_SRC_LOCAL:
-        ESP_LOGI(TAG, "message_cloud_received. ESP_RMAKER_REQ_SRC_LOCAL");
+
+    name_param = esp_rmaker_param_get_name(param);
+        ESP_LOGI(TAG, "message_cloud_received. ESP_RMAKER_REQ_SRC_LOCAL %s", name_param);
+        /**
+         * Receive setpoint temperature. Change threshold in order activate/deactivate thermostat
+         */
+        
+        if ((strcmp(name_param, CONFIG_ESP_RMAKER_TYPE_PARAM_SETPOINT_TEMPERATURE_NAME)) == 0) {
+            ESP_LOGI(TAG, "Received SETPOINT_TEMPERATURE from ESP_RMAKER_REQ_SRC_LOCAL ");
+            send_event_app_setpoint_temperature(val.val.f); 
+            break;
+
+        }
+        
+
+        /**
+         * @brief Construct a new if object
+         * Receive correction temperature from cloud
+         */
+        if ((strcmp(name_param, CONFIG_ESP_RMAKER_PARAM_TEMPERATURE_CORRECTION_NAME)) == 0) {
+            ESP_LOGI(TAG, "Received CALIBRATION from ESP_RMAKER_REQ_SRC_LOCAL ");
+            send_event_app_calibration(val.val.f);
+            break;
+
+        }
+        
+        if ((strcmp(name_param, CONFIG_ESP_RMAKER_PARAM_READ_INTERVAL_NAME)) == 0) {
+        ESP_LOGI(TAG, "Received READ_INTERVAL from ESP_RMAKER_REQ_SRC_LOCAL ");
+            send_event_app_read_interval(val.val.i);
+            break;
+
+        }
+        
+       
+
+        ESP_LOGE(TAG, "comparamos %s, con %s", name_param, ESP_RMAKER_DEF_NAME_PARAM);
+       if ((strcmp(name_param, ESP_RMAKER_DEF_NAME_PARAM)) == 0) {
+        char *nombre;
+        nombre = (char*) calloc(strlen(name_param), sizeof(char));
+        bzero(nombre, strlen(nombre));
+        strcpy(nombre, val.val.s);
+        ESP_LOGI(TAG, "Received Name from ESP_RMAKER_REQ_SRC_LOCAL %s", nombre);
+        send_event_app_change_name(nombre);
+            //send_event_app_read_interval(val.val.i);
+            break;
+
+        }
 
     break;
     /** Request received via command-response framework */
