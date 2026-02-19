@@ -313,9 +313,12 @@ void event_handler_sync (struct timeval *tv) {
 
     case SNTP_SYNC_STATUS_COMPLETED:
         ESP_LOGI(TAG, "La sincronizacion esta completada");
-        send_event_app_status(STATUS_APP_SYNCHRONIZED);
-        set_alarm(NTP_ALARM, ALARM_APP_OFF);
-
+        if (get_current_status_app() == STATUS_APP_SYNCING) {
+            send_event_app_status(STATUS_APP_SYNCHRONIZED);
+            set_alarm(NTP_ALARM, ALARM_APP_OFF);
+        } else {
+            ESP_LOGI(TAG, "Se ha refrescado la sincronizacion");
+        }
         break;
 
 
